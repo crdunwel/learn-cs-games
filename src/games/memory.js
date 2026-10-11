@@ -23,8 +23,21 @@ export function generateMemory(rng, level = 1) {
   const kind = pick(
     rng,
     level === 1
-      ? ["calloc", "bytes", "string"]
-      : ["calloc", "bytes", "string", "realloc", "free-order", "resize"],
+      ? ["calloc", "bytes", "string", "array-length", "zero-read"]
+      : [
+          "calloc",
+          "bytes",
+          "string",
+          "realloc",
+          "free-order",
+          "resize",
+          "array-length",
+          "zero-read",
+          "alias-write",
+          "pointer-offset",
+          "shrink",
+          "row-allocations",
+        ],
   );
   const count = integer(rng, 12, 240);
   let code, visual, step;
@@ -144,6 +157,113 @@ export function generateMemory(rng, level = 1) {
         "free(book)",
       ],
     );
+  } else if (kind === "array-length") {
+    code = `int values[${count}] = {0};\nsize_t length = sizeof values / sizeof values[0];`;
+    visual = flow("A real array", [
+      `${count} elements`,
+      "sizeof whole array ÷ sizeof element",
+    ]);
+    step = {
+      kind: "input",
+      prompt: "What value is stored in length?",
+      answer: String(count),
+      hint: "Here values is an array, not a pointer parameter. sizeof values includes every element.",
+      explanation: `The whole array uses ${count} element sizes. Dividing by one element's size gives ${count}. This formula would not find the length of a malloc pointer.`,
+      illustration: [`(${count} × sizeof(int)) / sizeof(int) = ${count}`],
+    };
+  } else if (kind === "zero-read") {
+    const index = integer(rng, 0, count - 1);
+    Object.assign(meta, { index });
+    code = `// Assume calloc succeeds.\nint *values = calloc(${count}, sizeof *values);\nint result = values[${index}];`;
+    visual = flow("Allocated int array", [
+      `${count} slots`,
+      `Read index ${index}`,
+    ]);
+    step = {
+      kind: "input",
+      prompt: "What is result?",
+      answer: "0",
+      hint: "calloc sets every allocated byte to zero. For int elements, that represents 0.",
+      explanation: `All ${count} int elements start at 0, including index ${index}. Nothing has written a different value there. malloc alone would not give this guarantee.`,
+      illustration: [
+        `values[${index}] = 0`,
+        "calloc → initialized; malloc → uninitialized",
+      ],
+    };
+  } else if (kind === "alias-write") {
+    const value = integer(rng, 1, 40),
+      delta = integer(rng, 1, 9),
+      index = integer(rng, 0, 2);
+    Object.assign(meta, { value, delta, index });
+    code = `// Assume malloc succeeds.\nint *p = malloc(3 * sizeof *p);\np[${index}] = ${value};\nint *q = p;\nq[${index}] += ${delta};\nint result = p[${index}];`;
+    visual = flow("Two names, one allocation", ["p → same block ← q"]);
+    step = {
+      kind: "input",
+      prompt: "What is result?",
+      answer: String(value + delta),
+      hint: "q = p copies the address, not the three integers.",
+      explanation: `p and q point to the same block. Writing through q changes the element that p sees: ${value} + ${delta} = ${value + delta}. Free this allocation once, not once per pointer.`,
+      illustration: [`q[${index}] and p[${index}] are the same element`],
+    };
+  } else if (kind === "pointer-offset") {
+    const start = integer(rng, 1, 20),
+      offset = integer(rng, 1, 3),
+      index = integer(rng, 0, 4 - offset);
+    const values = Array.from({ length: 5 }, (_, i) => start + 3 * i);
+    Object.assign(meta, { start, offset, index });
+    code = `int values[5] = {${values.join(", ")}};\nint *p = values + ${offset};\nint result = p[${index}];`;
+    visual = {
+      kind: "array",
+      label: "values · original indices",
+      items: values.map(String),
+    };
+    step = {
+      kind: "input",
+      prompt: "What is result?",
+      answer: String(values[offset + index]),
+      hint: "Pointer addition moves in elements. p[0] starts at the offset, not at values[0].",
+      explanation: `p starts at values[${offset}]. Move ${index} more elements: p[${index}] is values[${offset + index}], which is ${values[offset + index]}.`,
+      illustration: [
+        `Original index: ${offset} + ${index} = ${offset + index}`,
+      ],
+    };
+  } else if (kind === "shrink") {
+    const start = integer(rng, 1, 20),
+      nextCount = integer(rng, 1, 5),
+      index = integer(rng, 0, nextCount - 1);
+    Object.assign(meta, { start, nextCount, index });
+    code = `// Assume both allocations succeed.\nint *values = malloc(6 * sizeof *values);\nfor (int i = 0; i < 6; i++) values[i] = ${start} + i;\nint *tmp = realloc(values, ${nextCount} * sizeof *values);\nvalues = tmp;\nint result = values[${index}];`;
+    visual = flow("Shrink the allocation", [
+      "6 old elements",
+      `${nextCount} retained elements`,
+    ]);
+    step = {
+      kind: "input",
+      prompt: "What is result after shrinking?",
+      answer: String(start + index),
+      hint: "Successful realloc preserves the first min(old size, new size) bytes. The removed tail must not be read.",
+      explanation: `Shrinking keeps indices 0 through ${nextCount - 1}. Index ${index} is still inside that prefix, so its value remains ${start} + ${index} = ${start + index}. The discarded elements are no longer accessible.`,
+      illustration: [
+        `Preserved: ${Array.from({ length: nextCount }, (_, i) => start + i).join(", ")}`,
+      ],
+    };
+  } else if (kind === "row-allocations") {
+    const rows = integer(rng, 1, 8),
+      columns = integer(rng, 2, 10);
+    Object.assign(meta, { rows, columns });
+    code = `// Assume every allocation succeeds.\nint **grid = malloc(${rows} * sizeof *grid);\nfor (int r = 0; r < ${rows}; r++)\n  grid[r] = malloc(${columns} * sizeof *grid[r]);`;
+    visual = flow("Separate allocations", [
+      "One pointer array",
+      `${rows} row blocks`,
+    ]);
+    step = {
+      kind: "input",
+      prompt: "How many free calls release every block?",
+      answer: String(rows + 1),
+      hint: "Each successful malloc creates one block. A whole row is freed with one call, regardless of its number of integers.",
+      explanation: `There are ${rows} row blocks plus one pointer-array block: ${rows} + 1 = ${rows + 1} frees. Free each grid[r], then grid. The ${columns} integers in a row are not separate allocations.`,
+      illustration: [`${rows} × free(grid[r])`, "1 × free(grid)"],
+    };
   } else {
     const oldValues = Array.from({ length: integer(rng, 3, 5) }, () =>
       integer(rng, 1, 40),
@@ -168,6 +288,8 @@ export function generateMemory(rng, level = 1) {
       ],
     };
   }
+  if (["calloc", "realloc"].includes(kind)) step.optionFormat = "code";
+  if (kind === "free-order") step.optionFormat = "sequence";
   return { type: "trace", code, visual, meta, steps: [step] };
 }
 const lessonStep = (caption, code, items, result) => ({

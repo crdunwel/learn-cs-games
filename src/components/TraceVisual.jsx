@@ -6,7 +6,7 @@ export default function TraceVisual({ visual }) {
   return (
     <div className={`trace-visual trace-${visual.kind}`}>
       <span className="trace-label eyebrow">{visual.label}</span>
-      <div className="trace-items" aria-label={visual.label}>
+      <div className="trace-items" aria-label={visual.label} tabIndex={0}>
         {visual.items.map((item, index) => (
           <React.Fragment key={index}>
             {index > 0 && visual.kind !== "array" && (

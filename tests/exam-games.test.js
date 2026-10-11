@@ -165,12 +165,18 @@ test("dynamic-memory answers respect byte counts, preservation, and ownership", 
     }
   }
   assert.deepEqual([...seen].sort(), [
+    "alias-write",
+    "array-length",
     "bytes",
     "calloc",
     "free-order",
+    "pointer-offset",
     "realloc",
     "resize",
+    "row-allocations",
+    "shrink",
     "string",
+    "zero-read",
   ]);
 });
 

@@ -85,6 +85,149 @@ const step = (caption, result, items) => ({
 });
 export const basesLessons = [
   {
+    id: "binary-octal-groups",
+    title: "Binary → octal: groups of 3",
+    summary: "11010110₂ → 326₈. Group from the right.",
+    conversion: { source: "11010110", from: 2, answer: "326", to: 8 },
+    steps: [
+      step("Each octal digit holds three bits because 8 = 2³.", "11010110₂", [
+        "8 = 2³",
+        "3 bits → 1 octal digit",
+      ]),
+      step(
+        "Split from the right. Only the leftmost group may be short.",
+        "11 | 010 | 110",
+        ["11", "010", "110"],
+      ),
+      step(
+        "Pad that left group with one zero. Its value stays the same.",
+        "011 | 010 | 110",
+        ["011 → 3", "010 → 2", "110 → 6"],
+      ),
+      step(
+        "Read the octal digits in the same left-to-right order.",
+        "11010110₂ = 326₈",
+        ["3", "2", "6"],
+      ),
+    ],
+  },
+  {
+    id: "octal-binary-groups",
+    title: "Octal → binary: keep the zeros",
+    summary: "507₈ → 101000111₂. Every octal digit gets 3 bits.",
+    conversion: { source: "507", from: 8, answer: "101000111", to: 2 },
+    steps: [
+      step(
+        "Expand each octal digit independently into three bits.",
+        "5 → 101; 0 → 000; 7 → 111",
+        ["5 → 101", "0 → 000", "7 → 111"],
+      ),
+      step(
+        "Keep the entire middle 000 group. Removing it changes the number.",
+        "101 | 000 | 111",
+        ["101", "000", "111"],
+      ),
+      step(
+        "Join the groups. Only zeros at the far left may be omitted.",
+        "507₈ = 101000111₂",
+        ["507 (base 8)", "101000111 (base 2)"],
+      ),
+    ],
+  },
+  {
+    id: "binary-hex-groups",
+    title: "Binary → hex: groups of 4",
+    summary: "1011010011₂ → 2D3₁₆. D represents 13.",
+    conversion: { source: "1011010011", from: 2, answer: "2D3", to: 16 },
+    steps: [
+      step("Each hex digit holds four bits because 16 = 2⁴.", "1011010011₂", [
+        "16 = 2⁴",
+        "4 bits → 1 hex digit",
+      ]),
+      step(
+        "Group from the right; pad only the left edge.",
+        "0010 | 1101 | 0011",
+        ["0010", "1101", "0011"],
+      ),
+      step(
+        "1101 is 8 + 4 + 1 = 13. Write D for 13.",
+        "0010 → 2; 1101 → D; 0011 → 3",
+        ["2", "D", "3"],
+      ),
+      step("Combine those hex digits in order.", "1011010011₂ = 2D3₁₆", [
+        "2D3 (base 16)",
+        "723 (base 10)",
+      ]),
+    ],
+  },
+  {
+    id: "hex-binary-groups",
+    title: "Hex → binary: four bits per digit",
+    summary: "A6F₁₆ → 101001101111₂. A = 10; F = 15.",
+    conversion: { source: "A6F", from: 16, answer: "101001101111", to: 2 },
+    steps: [
+      step(
+        "Translate letters to values before writing their bits.",
+        "A = 10; F = 15",
+        ["A → 10", "6 → 6", "F → 15"],
+      ),
+      step(
+        "Use four bits for every digit, including 6 as 0110.",
+        "1010 | 0110 | 1111",
+        ["A → 1010", "6 → 0110", "F → 1111"],
+      ),
+      step(
+        "Join the groups. The zero before 110 must stay inside the number.",
+        "A6F₁₆ = 101001101111₂",
+        ["1010", "0110", "1111"],
+      ),
+    ],
+  },
+  {
+    id: "octal-place-values",
+    title: "Octal → decimal: powers of 8",
+    summary: "704₈ → 452₁₀. A zero still holds its place.",
+    conversion: { source: "704", from: 8, answer: "452", to: 10 },
+    steps: [
+      step(
+        "From right to left, octal columns are worth 1, 8, 64, …",
+        "8² = 64; 8¹ = 8; 8⁰ = 1",
+        ["7 × 64", "0 × 8", "4 × 1"],
+      ),
+      step("Multiply each digit by its place value.", "448 + 0 + 4", [
+        "448",
+        "0",
+        "4",
+      ]),
+      step(
+        "Add the contributions. Do not treat 704 as decimal digits.",
+        "704₈ = 452₁₀",
+        ["704 (base 8)", "452 (base 10)"],
+      ),
+    ],
+  },
+  {
+    id: "hex-place-values",
+    title: "Hex → decimal: letters have values",
+    summary: "3B₁₆ → 59₁₀. B is eleven, not two digits.",
+    conversion: { source: "3B", from: 16, answer: "59", to: 10 },
+    steps: [
+      step("Hex uses A, B, C, D, E, F for values 10 through 15.", "B = 11", [
+        "3 → 3",
+        "B → 11",
+      ]),
+      step(
+        "The left digit counts sixteens; the right digit counts ones.",
+        "3 × 16 + 11 × 1",
+        ["48", "11"],
+      ),
+      step("Add the two place-value contributions.", "3B₁₆ = 59₁₀", [
+        "3B (base 16)",
+        "59 (base 10)",
+      ]),
+    ],
+  },
+  {
     id: "place-value",
     title: "Read the place values",
     summary: "Right to left: 1, base, base², …",

@@ -930,7 +930,7 @@ footer > span:first-child {
   font-size: 16px;
   line-height: 1.6;
   color: #7b7164;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   max-width: 760px;
   margin: 8px 0 0;
 }
@@ -985,7 +985,7 @@ footer > span:first-child {
     monospace;
   line-height: 1.6;
   color: var(--deep);
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .tutorial-controls {
   display: flex;
@@ -1107,7 +1107,7 @@ footer > span:first-child {
   background: white;
   border: 1px solid #dcd5ca;
   font-size: 20px;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .choices button.selected {
   border-color: var(--accent);
@@ -1126,8 +1126,11 @@ footer > span:first-child {
   background: var(--soft);
 }
 pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: normal;
   background: #30263f;
   color: #eee3ff;
   padding: 25px;
@@ -2495,7 +2498,7 @@ button.queue-position:hover:not(:disabled) .queue-cell {
   font-size: 19px;
   line-height: 1.5;
   margin: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .feedback-copy .answer-comparison {
   display: block;
@@ -2883,7 +2886,7 @@ button.queue-position:hover:not(:disabled) .queue-cell {
 }
 .tooltip-content {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   overscroll-behavior: contain;
 }
 .code-tooltip {
@@ -3049,7 +3052,7 @@ button.queue-position:hover:not(:disabled) .queue-cell {
   font:
     500 20px/1.4 ui-monospace,
     monospace;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .trace-index {
   display: block;
@@ -3190,4 +3193,84 @@ button.queue-position:hover:not(:disabled) .queue-cell {
   color: #655e53;
   font-style: normal;
   letter-spacing: normal;
+}
+
+/* Keep notation intact: scroll inside the teaching object, never the page. */
+.code-block code {
+  white-space: inherit;
+  word-break: normal;
+}
+.trace-scene,
+.trace-visual,
+.trace-items,
+.trace-result {
+  min-width: 0;
+  max-width: 100%;
+}
+.trace-items {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: safe center;
+  padding-block: 4px;
+}
+.trace-item,
+.trace-arrow {
+  flex: 0 0 auto;
+}
+.trace-value {
+  white-space: nowrap;
+}
+.tokens {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: safe center;
+}
+.tokens > span {
+  flex: 0 0 auto;
+}
+.output-well p {
+  white-space: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.tutorial-game-bases .trace-result {
+  white-space: nowrap;
+  overflow-x: auto;
+  padding-block: 5px;
+}
+.choices.choices-wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.choices button {
+  min-width: 0;
+  overflow-x: auto;
+  text-wrap: pretty;
+}
+.option-code,
+.option-sequence {
+  display: block;
+  white-space: pre;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  line-height: 1.6;
+}
+.option-text {
+  white-space: normal;
+  word-break: normal;
+}
+.feedback-illustration > span {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.feedback-copy .answer-comparison b {
+  display: inline-block;
+  vertical-align: middle;
+  max-width: 100%;
+  white-space: pre;
+  overflow-x: auto;
+}
+.queue-state-values > span,
+.growth-demo strong {
+  white-space: nowrap;
 }

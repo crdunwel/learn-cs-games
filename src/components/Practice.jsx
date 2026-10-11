@@ -354,7 +354,11 @@ export default function Practice({ game, level, onProgress }) {
           </div>
         )}
         {step.kind === "choice" && !indexQuestion && (
-          <div className="choices" role="group" aria-label="Answer choices">
+          <div
+            className={`choices ${step.optionFormat ? "choices-wide" : ""}`}
+            role="group"
+            aria-label="Answer choices"
+          >
             {step.options.map((option) => (
               <button
                 type="button"
@@ -364,7 +368,15 @@ export default function Practice({ game, level, onProgress }) {
                 disabled={checked}
                 onClick={() => setDraft(option)}
               >
-                {step.optionLabels?.[option] || option}
+                <span
+                  className={
+                    step.optionFormat
+                      ? `option-${step.optionFormat}`
+                      : "option-text"
+                  }
+                >
+                  {step.optionLabels?.[option] || option}
+                </span>
               </button>
             ))}
           </div>

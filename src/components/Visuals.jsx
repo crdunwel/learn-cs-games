@@ -83,6 +83,7 @@ export function Tokens({ tokens, stop, checkpointLabel }) {
   return (
     <div
       className={`tokens ${atPoint ? "has-checkpoint" : ""}`}
+      tabIndex={0}
       aria-label={`Expression: ${tokens.join(" ")}. ${atPoint ? `Point ${checkpointLabel} is after token ${stop}, ${tokens[stop - 1]}.` : stop ? `Processed through token ${stop}.` : "No tokens processed."}`}
     >
       {tokens.map((token, i) => {

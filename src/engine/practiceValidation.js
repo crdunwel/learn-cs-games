@@ -530,6 +530,96 @@ function memory(q) {
       q,
       `typedef struct Book { char title[${m.titleLength + 1}]; char **authors; int nAuth; } Book;`,
     );
+  } else if (m.kind === "array-length") {
+    expected = m.count;
+    codeIs(
+      q,
+      `int values[${m.count}] = {0}; size_t length = sizeof values / sizeof values[0];`,
+    );
+  } else if (m.kind === "zero-read") {
+    need(integer(m.index, 0, m.count - 1), "calloc read index");
+    need(
+      q.code.includes("Assume calloc succeeds"),
+      "calloc success assumption",
+    );
+    expected = 0;
+    codeIs(
+      q,
+      `int *values = calloc(${m.count}, sizeof *values); int result = values[${m.index}];`,
+    );
+  } else if (m.kind === "alias-write") {
+    need(
+      integer(m.value, 1, 40) &&
+        integer(m.delta, 1, 9) &&
+        integer(m.index, 0, 2),
+      "alias domain",
+    );
+    need(
+      q.code.includes("Assume malloc succeeds"),
+      "alias allocation assumption",
+    );
+    // Both pointers designate one slot; model the write, not a copy of the array.
+    const block = [null, null, null];
+    block[m.index] = m.value;
+    block[m.index] += m.delta;
+    expected = block[m.index];
+    codeIs(
+      q,
+      `int *p = malloc(3 * sizeof *p); p[${m.index}] = ${m.value}; int *q = p; q[${m.index}] += ${m.delta}; int result = p[${m.index}];`,
+    );
+  } else if (m.kind === "pointer-offset") {
+    need(
+      integer(m.start, 1, 20) &&
+        integer(m.offset, 1, 3) &&
+        integer(m.index, 0, 4 - m.offset),
+      "pointer offset domain",
+    );
+    const values = [
+      m.start,
+      m.start + 3,
+      m.start + 6,
+      m.start + 9,
+      m.start + 12,
+    ];
+    expected = values.slice(m.offset)[m.index];
+    need(same(q.visual.items, values.map(String)), "pointer array diagram");
+    codeIs(
+      q,
+      `int values[5] = {${values.join(", ")}}; int *p = values + ${m.offset}; int result = p[${m.index}];`,
+    );
+  } else if (m.kind === "shrink") {
+    need(
+      integer(m.start, 1, 20) &&
+        integer(m.nextCount, 1, 5) &&
+        integer(m.index, 0, m.nextCount - 1),
+      "shrink retained prefix",
+    );
+    need(
+      q.code.includes("Assume both allocations succeed"),
+      "shrink allocation assumption",
+    );
+    const original = Array.from({ length: 6 }, (_, i) => m.start + i);
+    expected = original.slice(0, m.nextCount)[m.index];
+    codeIs(
+      q,
+      `int *values = malloc(6 * sizeof *values); for (int i = 0; i < 6; i++) values[i] = ${m.start} + i; int *tmp = realloc(values, ${m.nextCount} * sizeof *values); values = tmp; int result = values[${m.index}];`,
+    );
+  } else if (m.kind === "row-allocations") {
+    need(
+      integer(m.rows, 1, 8) && integer(m.columns, 2, 10),
+      "matrix allocation domain",
+    );
+    need(
+      q.code.includes("Assume every allocation succeeds"),
+      "matrix success assumption",
+    );
+    const blocks = ["pointer array"];
+    for (let row = 0; row < m.rows; row++) blocks.push(`row ${row}`);
+    expected = blocks.length;
+    codeIs(
+      q,
+      `int **grid = malloc(${m.rows} * sizeof *grid); for (int r = 0; r < ${m.rows}; r++) grid[r] = malloc(${m.columns} * sizeof *grid[r]);`,
+    );
   } else {
     need(
       m.kind === "resize" &&

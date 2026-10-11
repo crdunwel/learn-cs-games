@@ -102,9 +102,15 @@ export function memoryCase(kind, data = {}) {
     "realloc",
     "free-order",
     "resize",
+    "array-length",
+    "zero-read",
+    "alias-write",
+    "pointer-offset",
+    "shrink",
+    "row-allocations",
   ];
   const rest = [
-    draw(kinds.indexOf(kind), 0, 5),
+    draw(kinds.indexOf(kind), 0, kinds.length - 1),
     draw(data.count ?? 12, 12, 240),
   ];
   if (kind === "bytes")
@@ -126,6 +132,28 @@ export function memoryCase(kind, data = {}) {
       draw(data.index ?? 0, 0, data.values.length - 1),
     );
   }
+  if (kind === "zero-read")
+    rest.push(draw(data.index ?? 0, 0, (data.count ?? 12) - 1));
+  if (kind === "alias-write")
+    rest.push(
+      draw(data.value, 1, 40),
+      draw(data.delta, 1, 9),
+      draw(data.index, 0, 2),
+    );
+  if (kind === "pointer-offset")
+    rest.push(
+      draw(data.start, 1, 20),
+      draw(data.offset, 1, 3),
+      draw(data.index, 0, 4 - data.offset),
+    );
+  if (kind === "shrink")
+    rest.push(
+      draw(data.start, 1, 20),
+      draw(data.nextCount, 1, 5),
+      draw(data.index, 0, data.nextCount - 1),
+    );
+  if (kind === "row-allocations")
+    rest.push(draw(data.rows, 1, 8), draw(data.columns, 2, 10));
   return generateMemory(tape(...rest), 3);
 }
 export function searchCase(n, start, gap, target, kind = "result", round = 0) {

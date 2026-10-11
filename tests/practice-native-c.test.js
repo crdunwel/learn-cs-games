@@ -256,6 +256,57 @@ test(
           `{${q.code} Book *book=malloc(sizeof *book);assert(book);book->nAuth=${authors};book->authors=malloc(${authors}*sizeof *book->authors);assert(book->authors);for(int i=0;i<${authors};i++){book->authors[i]=malloc(4);assert(book->authors[i]);strcpy(book->authors[i],"Amy");}for(int i=0;i<book->nAuth;i++)free(book->authors[i]);free(book->authors);free(book);}`,
         );
       }
+    // New memory templates execute their exact displayed source; boundary literals
+    // complement the complete finite-domain JavaScript checks.
+    for (const count of [12, 240]) {
+      let q = verify("memory", memoryCase("array-length", { count }));
+      checks.push(`{${q.code}assert(length==${count});}`);
+      for (const index of [0, count - 1]) {
+        q = verify("memory", memoryCase("zero-read", { count, index }));
+        checks.push(`{${q.code}assert(result==0);free(values);}`);
+      }
+    }
+    for (const value of [1, 40])
+      for (const delta of [1, 9])
+        for (let index = 0; index < 3; index++) {
+          const q = verify(
+            "memory",
+            memoryCase("alias-write", { value, delta, index }),
+          );
+          checks.push(`{${q.code}assert(result==${value + delta});free(p);}`);
+        }
+    for (const start of [1, 20]) {
+      for (let offset = 1; offset <= 3; offset++)
+        for (let index = 0; index < 5 - offset; index++) {
+          const q = verify(
+            "memory",
+            memoryCase("pointer-offset", { start, offset, index }),
+          );
+          checks.push(
+            `{${q.code}assert(result==${start + 3 * (offset + index)});}`,
+          );
+        }
+      for (let nextCount = 1; nextCount <= 5; nextCount++)
+        for (let index = 0; index < nextCount; index++) {
+          const q = verify(
+            "memory",
+            memoryCase("shrink", { start, nextCount, index }),
+          );
+          checks.push(
+            `{${q.code}assert(result==${start + index});free(values);}`,
+          );
+        }
+    }
+    for (let rows = 1; rows <= 8; rows++)
+      for (const columns of [2, 10]) {
+        const q = verify(
+          "memory",
+          memoryCase("row-allocations", { rows, columns }),
+        );
+        checks.push(
+          `{${q.code}int freed=0;for(int r=0;r<${rows};r++){free(grid[r]);freed++;}free(grid);freed++;assert(freed==${rows + 1});}`,
+        );
+      }
     const source = `#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>

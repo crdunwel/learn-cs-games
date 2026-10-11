@@ -24,7 +24,7 @@ export default function Tutorial({ game, onComplete }) {
   }
   return (
     <section
-      className={`play-panel tutorial-panel ${step.type === "trace" ? "tutorial-trace" : ""}`}
+      className={`play-panel tutorial-panel tutorial-game-${game.id} ${step.type === "trace" ? "tutorial-trace" : ""}`}
       aria-label={`${game.title} tutorial`}
     >
       <div className="lesson-picker">
@@ -124,7 +124,11 @@ export default function Tutorial({ game, onComplete }) {
           <div className="trace-scene">
             {step.code && <CodeBlock code={step.code} />}
             <TraceVisual visual={step.visual} />
-            <p className="trace-result" key={`${lesson.id}-${index}`}>
+            <p
+              className="trace-result"
+              key={`${lesson.id}-${index}`}
+              tabIndex={game.id === "bases" ? 0 : undefined}
+            >
               {step.result || ""}
             </p>
           </div>

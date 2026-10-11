@@ -3,7 +3,7 @@ import Tooltip from "./Tooltip.jsx";
 
 export default function CodeBlock({ code, className = "" }) {
   return (
-    <pre className={`code-block ${className}`}>
+    <pre className={`code-block ${className}`} tabIndex={0} aria-label="C code">
       <code>
         {String(code)
           .split(/(\bwork\(\))/g)

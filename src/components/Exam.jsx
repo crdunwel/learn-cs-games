@@ -108,6 +108,7 @@ function ExamDiagram({ diagram }) {
     return (
       <div
         className="exam-expression"
+        tabIndex={0}
         aria-label="Infix expression with checkpoints"
       >
         {diagram.tokens.map((token, index) => (
@@ -144,7 +145,7 @@ function ExamDiagram({ diagram }) {
     );
   if (diagram.values)
     return (
-      <div className="exam-list" aria-label="Linked list">
+      <div tabIndex={0} className="exam-list" aria-label="Linked list">
         <span>head →</span>
         {diagram.values.map((value, index) => (
           <React.Fragment key={index}>
@@ -353,7 +354,7 @@ function Results({ attempt, onScore, onNew }) {
               <div className="exam-review-body">
                 <p>{question.prompt}</p>
                 {question.code && (
-                  <pre className="exam-code">
+                  <pre className="exam-code" tabIndex={0} aria-label="C code">
                     <code>{question.code}</code>
                   </pre>
                 )}
@@ -374,13 +375,13 @@ function Results({ attempt, onScore, onNew }) {
                       </span>
                       <div className="exam-review-answer">
                         <span>Your answer</span>
-                        <pre>
+                        <pre tabIndex={0}>
                           {attempt.answers[part.id]?.trim() || "No answer"}
                         </pre>
                       </div>
                       <div className="exam-review-answer is-model">
                         <span>Model answer</span>
-                        <pre>{part.answer}</pre>
+                        <pre tabIndex={0}>{part.answer}</pre>
                       </div>
                       <p className="exam-explanation">{part.explanation}</p>
                       {!part.auto && (

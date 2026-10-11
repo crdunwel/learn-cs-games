@@ -30,3 +30,5 @@ A paper has `id`, `seed`, `title`, `questions`, and for exams `durationMinutes`,
 ## Independence boundary
 
 Generators can reuse domain models. Validators must independently derive answers and reject unsupported domains/source, not call the generator's solver. Runtime guards are fail-closed. Tests must include intentional corruption so a guard that simply accepts everything cannot pass.
+
+Optional choice `optionFormat: "code" | "sequence"` requests a single wide column and preserves notation inside each option. Omit for prose. This is presentation metadata only; evaluation still uses the shared answer parser. Base lesson `conversion` metadata records source/from/answer/to for independent tutorial value checks.

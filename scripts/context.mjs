@@ -77,7 +77,11 @@ export const routes = [
     ["linked", "pointer", "insertion", "link & bloom", "list mutation"],
     ["docs/games/links.md"],
     ["src/games/links.js"],
-    ["tests/exam-games.test.js", "tests/practice-native-c.test.js"],
+    [
+      "tests/exam-games.test.js",
+      "tests/practice-native-c.test.js",
+      "tests/memory-variety.test.js",
+    ],
   ),
   route(
     "search",
@@ -93,7 +97,11 @@ export const routes = [
     ["memory", "alloc", "ownership", "cleanup", "sizeof", "bytes", "free("],
     ["docs/games/memory.md"],
     ["src/games/memory.js"],
-    ["tests/exam-games.test.js", "tests/practice-native-c.test.js"],
+    [
+      "tests/exam-games.test.js",
+      "tests/practice-native-c.test.js",
+      "tests/memory-variety.test.js",
+    ],
   ),
   route(
     "bases",
@@ -109,7 +117,11 @@ export const routes = [
     ],
     ["docs/games/bases.md"],
     ["src/games/bases.js"],
-    ["tests/recursion-bases.test.js", "tests/answer-formats.test.js"],
+    [
+      "tests/recursion-bases.test.js",
+      "tests/answer-formats.test.js",
+      "tests/memory-variety.test.js",
+    ],
   ),
   route(
     "exam",

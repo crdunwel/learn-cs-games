@@ -16,6 +16,7 @@ const choice = (
   illustration,
 ) => ({
   kind: "choice",
+  optionFormat: answer.includes(";") ? "code" : "sequence",
   prompt,
   answer,
   options: shuffle(rng, [...new Set([answer, ...alternatives])]),

@@ -690,8 +690,10 @@
   letter-spacing: 0.5px;
 }
 .exam-review-answer pre {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+  overflow-wrap: normal;
   margin: 6px 0;
   padding: 13px;
   font:
@@ -961,4 +963,21 @@
 }
 .exam-answer-part .answer-format-hint {
   color: #515b49;
+}
+
+/* Keep a code line and an infix/list trace readable as one horizontal unit. */
+.exam-code {
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.exam-expression,
+.exam-list {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: safe center;
+}
+.exam-expression > *,
+.exam-list > * {
+  flex-shrink: 0;
 }

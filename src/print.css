@@ -127,7 +127,7 @@
   font-size: 12pt;
   line-height: 1.35;
   text-align: left;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
 }
 .worksheet * {
   box-sizing: border-box;
@@ -190,7 +190,7 @@
 .paper-code,
 .paper-answer pre {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   font-family: "Courier New", monospace;
   font-size: 10pt;
   line-height: 1.35;
