@@ -1,4 +1,5 @@
 import { integer, pick, shuffle } from "../engine/random.js";
+import { linkedDequeueLessons } from "../engine/linkedDequeue.js";
 
 // Lab 6 Q3 convention: rear is the BACK item, not the next insertion slot.
 // In every state: rear = (front + count - 1 + capacity) % capacity.
@@ -365,3 +366,4 @@ queueLessons.push({
     },
   ],
 });
+queueLessons.push(...linkedDequeueLessons);

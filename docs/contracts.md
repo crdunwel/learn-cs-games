@@ -19,6 +19,8 @@ Practice `trace` questions carry `code`, a `visual` (`kind`, items/labels), and 
 
 Each lesson is `{ id, title, summary, steps }`. Each step supplies `type`, `caption`, and the matching diagram/code state. [Tutorial.jsx](../src/components/Tutorial.jsx) selects and walks steps; lesson changes reset its index. Stack lessons carry a common `stackCapacity` so their geometry does not grow as items are pushed. Lessons are static reviewed examples; the generated-question guard does not automatically prove every caption.
 
+Queue-only lesson type `linkedQueue` carries `title`, `why`, `activeLines`, `change`, and the immutable pointer snapshot described in [linked dequeue](games/linked-dequeue.md). `activeLines` refers to the shared exact C source; the renderer never derives a new answer or mutates a snapshot. This tutorial type does not extend the generated-question or paper contract. The final action replays the lesson without awarding progress.
+
 ## Exam and worksheet
 
 A paper has `id`, `seed`, `title`, `questions`, and for exams `durationMinutes`, `totalPoints`, and `sections`. Exam questions carry `id`, `section`, `label`, `title`, `prompt`, `points`, optional `code`/`diagram`, and `parts`. Parts have stable IDs, `kind`, `prompt`, `points`, `answer`, `auto`, and optional `format`, `unit`, choices, explanation or rubric.

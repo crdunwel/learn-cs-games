@@ -5,6 +5,8 @@ import { Stack, Tokens, QueueArray, Growth } from "./Visuals.jsx";
 import Help from "./Help.jsx";
 import CodeBlock from "./CodeBlock.jsx";
 import TraceVisual from "./TraceVisual.jsx";
+import LinkedDequeue from "./LinkedDequeue.jsx";
+import { linkedDequeueCode } from "../engine/linkedDequeue.js";
 
 export default function Tutorial({ game, onComplete }) {
   const lessons = game.lessons || [
@@ -101,7 +103,7 @@ export default function Tutorial({ game, onComplete }) {
   }
   return (
     <section
-      className={`play-panel tutorial-panel tutorial-game-${game.id} ${step.type === "trace" ? "tutorial-trace" : ""}`}
+      className={`play-panel tutorial-panel tutorial-game-${game.id} ${step.type === "trace" ? "tutorial-trace" : ""} ${step.type === "linkedQueue" ? "tutorial-linked" : ""}`}
       aria-label={`${game.title} tutorial`}
     >
       <div className="lesson-picker">
@@ -117,6 +119,18 @@ export default function Tutorial({ game, onComplete }) {
             </option>
           ))}
         </select>
+        {game.id === "queue" && step.type !== "linkedQueue" && (
+          <button
+            className="quiet-button dequeue-lesson-shortcut"
+            onClick={() =>
+              selectLesson(
+                lessons.findIndex((item) => item.id === "linked-dequeue-three"),
+              )
+            }
+          >
+            Dequeue in C →
+          </button>
+        )}
       </div>
       <p className="lesson-summary">{lesson.summary}</p>
       <div className="panel-top">
@@ -126,7 +140,17 @@ export default function Tutorial({ game, onComplete }) {
             Step {index + 1} / {lesson.steps.length}
           </span>
           <Help label="About this example">
-            {game.id === "queue" && step.state?.items ? (
+            {step.type === "linkedQueue" ? (
+              <>
+                <p>
+                  This is a doubly linked queue. head is the front node; tail is
+                  the last node. A, B and C name memory locations. next goes
+                  forward; prev goes backward. NULL means no node. Read
+                  x-&gt;field as “follow x, then use its field.”
+                </p>
+                <CodeBlock code={linkedDequeueCode.join("\n")} />
+              </>
+            ) : game.id === "queue" && step.state?.items ? (
               "This is an ordinary FIFO queue. ENQUEUE joins the rear; DEQUEUE removes the front. These labels name items, not array indices."
             ) : game.id === "queue" ? (
               "front is the first item’s index; rear is the last item’s index, as in Lab 6 Q3. QSize counts items. When empty, this app keeps front and sets rear = (front − 1 + capacity) % capacity; neither points to an item. A blank cell means no active queue item."
@@ -155,7 +179,7 @@ export default function Tutorial({ game, onComplete }) {
         style={{ minHeight: measuredLayout?.height }}
         key={lesson.id}
       >
-        <TutorialScene step={step} game={game} index={index} />
+        <TutorialScene step={step} game={game} index={index} lesson={lesson} />
         {layout?.key !== layoutKey && (
           <div
             className="tutorial-measures"
@@ -165,7 +189,12 @@ export default function Tutorial({ game, onComplete }) {
           >
             {lesson.steps.map((item, i) => (
               <div className="tutorial-measure" key={i}>
-                <TutorialScene step={item} game={game} index={i} />
+                <TutorialScene
+                  step={item}
+                  game={game}
+                  index={i}
+                  lesson={lesson}
+                />
               </div>
             ))}
           </div>
@@ -186,16 +215,30 @@ export default function Tutorial({ game, onComplete }) {
         </div>
         <button
           className="primary"
-          onClick={() => (last ? onComplete() : setIndex(index + 1))}
+          aria-label={
+            last && step.type === "linkedQueue" ? "Replay example" : undefined
+          }
+          onClick={() =>
+            last
+              ? step.type === "linkedQueue"
+                ? setIndex(0)
+                : onComplete()
+              : setIndex(index + 1)
+          }
         >
-          {last ? "Try a round" : "Next step"} <span aria-hidden="true">→</span>
+          {last
+            ? step.type === "linkedQueue"
+              ? "Replay"
+              : "Try a round"
+            : "Next step"}{" "}
+          <span aria-hidden="true">→</span>
         </button>
       </div>
     </section>
   );
 }
 
-function TutorialScene({ step, game, index }) {
+function TutorialScene({ step, game, index, lesson }) {
   return (
     <>
       {step.type === "postfix" && (
@@ -273,6 +316,9 @@ function TutorialScene({ step, game, index }) {
             {step.result || ""}
           </p>
         </div>
+      )}
+      {step.type === "linkedQueue" && (
+        <LinkedDequeue step={step} index={index} steps={lesson.steps} />
       )}
     </>
   );

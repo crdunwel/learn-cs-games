@@ -29,3 +29,7 @@ Thirty percent of generated rounds use an ordinary FIFO list (`variant: fifo`). 
 The circular review shows `(index + 1) % capacity` and explains `%` as remainder; it identifies the value removed/stored and updates QSize separately. rear still means last occupied item in the circular course model. See [UI](../ui.md) for review and stable-layout behavior.
 
 Front/rear badges remain visible throughout Learn and operation review, including empty circular states. Empty badges use dashed outlines and identify **stored indices**, not occupied items. Phone diagrams spell out FRONT and REAR. Ordinary empty queues explicitly say FRONT/REAR have no item; both names remain in every before/after explanation.
+
+## Linked dequeue in C
+
+Learn → **Dequeue in C** opens a separate [doubly linked queue walkthrough](linked-dequeue.md). Its three-node, empty and singleton examples use the exam's `head`, `tail`, `next`, `prev`, `temp` and `retval` conventions. Each screen connects one executed C action to the resulting pointers and explains why it is needed. This is a static tutorial, not an additional generated practice family: array/FIFO question guards and printable worksheets retain their existing models. Return/replay never changes XP or saved practice progress.

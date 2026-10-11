@@ -1,0 +1,227 @@
+/* This walkthrough uses node addresses, never circular-array indices. */
+.tutorial-panel.tutorial-linked {
+  display: block;
+}
+.tutorial-linked > .panel-top {
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tutorial-linked > .lesson-summary {
+  margin: 0 0 18px;
+}
+.tutorial-linked > .tutorial-caption {
+  font-size: clamp(24px, 2.2vw, 30px);
+  line-height: 1.35;
+  margin: 12px 0 18px;
+  overflow: visible;
+}
+.tutorial-linked > .tutorial-sized-stage {
+  margin: 0;
+  align-self: stretch;
+}
+.linked-dequeue {
+  width: 100%;
+  min-width: 0;
+}
+.dequeue-code {
+  background: var(--soft);
+  color: var(--deep);
+  border-left: 3px solid var(--accent);
+  padding: 16px 20px;
+}
+.dequeue-code > code {
+  display: block;
+  min-height: 3em;
+  margin-top: 10px;
+  font:
+    500 clamp(16px, 1.6vw, 21px)/1.5 ui-monospace,
+    monospace;
+  background: none;
+  color: inherit;
+}
+.dequeue-code-line {
+  display: flex;
+  flex-wrap: wrap;
+}
+.dequeue-code-chunk {
+  white-space: pre;
+}
+.dequeue-why-space {
+  position: relative;
+  margin: 14px 0 8px;
+}
+.dequeue-why,
+.dequeue-why-sample {
+  margin: 0;
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.5;
+  color: var(--muted);
+}
+.dequeue-why-samples {
+  position: absolute;
+  inset: 0 0 auto;
+  visibility: hidden;
+  overflow: hidden;
+  pointer-events: none;
+}
+.dequeue-diagram-viewport {
+  container-type: inline-size;
+  width: 100%;
+}
+.linked-queue-diagram {
+  display: block;
+  width: 100%;
+  height: 220px;
+  overflow: visible;
+  font-family: ui-monospace, monospace;
+}
+.many-nodes .linked-queue-diagram {
+  height: 440px;
+}
+.no-nodes .linked-queue-diagram {
+  height: 160px;
+}
+@container (min-width: 650px) {
+  .many-nodes .linked-queue-diagram {
+    height: 260px;
+  }
+}
+.dequeue-node rect {
+  fill: var(--soft);
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.dequeue-node line {
+  stroke: var(--line);
+}
+.dequeue-node text,
+.dequeue-link-label {
+  fill: var(--deep);
+  font-size: 15px;
+}
+.dequeue-node .dequeue-field-label {
+  fill: var(--deep);
+  font-size: 12px;
+}
+.dequeue-node .dequeue-field-value {
+  font-size: 19px;
+  font-weight: 600;
+}
+.dequeue-node .dequeue-node-id {
+  fill: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+}
+.dequeue-node.is-freed rect {
+  fill: transparent;
+  stroke: var(--muted);
+  stroke-dasharray: 5 5;
+}
+.dequeue-node.is-freed text {
+  fill: var(--muted);
+  font-size: 13px;
+}
+.dequeue-link {
+  fill: none;
+  stroke: var(--deep);
+  stroke-width: 1.6;
+}
+.dequeue-arrow-fill.arrow-link {
+  fill: var(--deep);
+}
+.dequeue-pointer path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.dequeue-pointer text {
+  fill: currentColor;
+  font-size: 17px;
+  font-weight: 600;
+}
+.dequeue-pointer .dequeue-pointer-role {
+  font-size: 12px;
+  font-weight: 400;
+}
+.pointer-head,
+.arrow-head {
+  color: var(--accent);
+  fill: var(--accent);
+}
+.pointer-tail,
+.arrow-tail {
+  color: #73528c;
+  fill: #73528c;
+}
+.pointer-temp,
+.arrow-temp {
+  color: #98651e;
+  fill: #98651e;
+}
+.dequeue-pointer.is-dangling path {
+  stroke-dasharray: 4 4;
+}
+.dequeue-null {
+  font-size: 16px;
+}
+.dequeue-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 17px;
+}
+.dequeue-state b {
+  display: inline-block;
+  font-family: ui-monospace, monospace;
+}
+.dequeue-local,
+.dequeue-return {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.dequeue-local > span,
+.dequeue-return > span {
+  color: var(--muted);
+}
+.dequeue-local b,
+.dequeue-return b {
+  min-width: 3ch;
+  text-align: right;
+}
+.dequeue-local[aria-hidden="true"] {
+  visibility: hidden;
+}
+.dequeue-lesson-shortcut {
+  margin-left: auto;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .dequeue-lesson-shortcut {
+    margin: 0;
+  }
+  .dequeue-code {
+    padding: 12px;
+  }
+  .dequeue-code .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+  }
+  .dequeue-state {
+    align-items: stretch;
+    gap: 10px;
+    font-size: 15px;
+  }
+  .dequeue-state > span {
+    flex: 1 0 100%;
+  }
+  .dequeue-local,
+  .dequeue-return {
+    justify-content: space-between;
+  }
+}

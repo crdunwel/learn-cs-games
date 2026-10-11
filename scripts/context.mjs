@@ -41,9 +41,19 @@ export const routes = [
       "qsize",
       "wraparound",
     ],
-    ["docs/games/queue.md"],
-    ["src/games/queue.js", "src/components/Practice.jsx"],
-    ["tests/generators.test.js", "tests/practice-validation.test.js"],
+    ["docs/games/queue.md", "docs/games/linked-dequeue.md"],
+    [
+      "src/games/queue.js",
+      "src/components/Practice.jsx",
+      "src/engine/linkedDequeue.js",
+      "src/components/LinkedDequeue.jsx",
+    ],
+    [
+      "tests/generators.test.js",
+      "tests/practice-validation.test.js",
+      "tests/linked-dequeue.test.js",
+      "tests/browser/linked-dequeue.spec.js",
+    ],
   ),
   route(
     "bigO",

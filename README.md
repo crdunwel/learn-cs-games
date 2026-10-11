@@ -20,7 +20,7 @@ Open the URL Vite prints, normally `http://127.0.0.1:5173/`. [index.html](index.
 | Game              | Practice                                             |
 | ----------------- | ---------------------------------------------------- |
 | Stack & Slay      | Vertical operator stacks and infix-to-postfix        |
-| Poolside Queue    | Ordinary FIFO and circular arrays, operation replays |
+| Poolside Queue    | FIFO, circular arrays, and guided linked dequeue     |
 | Big-O Afterglow   | C loops, binary search, cubic growth, timed scaling  |
 | Recursion Reverie | Calls, Fibonacci, permutations, recursive search     |
 | Link & Bloom      | Linked-list insertion, pointer order, cleanup        |

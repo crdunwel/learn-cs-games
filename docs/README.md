@@ -21,6 +21,7 @@ Read [the agent entrypoint](../AGENTS.md) first. Use `./scripts/context "task"` 
 
 - [Stack & Slay](games/postfix.md)
 - [Poolside Queue](games/queue.md)
+- [Linked dequeue walkthrough](games/linked-dequeue.md) — code-bound pointer lessons inside Poolside Queue Learn
 - [Big-O Afterglow](games/bigO.md)
 - [Recursion Reverie](games/recursion.md)
 - [Link & Bloom](games/links.md)

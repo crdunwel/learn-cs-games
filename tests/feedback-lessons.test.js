@@ -248,6 +248,7 @@ test("all stack lessons process every token then visibly flush one operator at a
 test("queue lessons cover FIFO, wrap, full and empty without mutating previous scenes", () => {
   const results = new Set();
   for (const lesson of queueLessons) {
+    if (lesson.steps[0].type === "linkedQueue") continue;
     if (lesson.id === "ordinary-fifo") {
       assert.deepEqual(
         lesson.steps.map((step) => step.state.items),
@@ -289,9 +290,22 @@ test("every game has several individually selectable, short, complete lessons", 
     for (const lesson of game.lessons) {
       assert(lesson.title && lesson.summary && lesson.steps.length >= 3);
       for (const step of lesson.steps) {
-        assert.equal(step.type, game.generate(() => 0.4, 1).type);
+        assert.equal(
+          step.type,
+          step.type === "linkedQueue" && game.id === "queue"
+            ? "linkedQueue"
+            : game.generate(() => 0.4, 1).type,
+        );
         assert(step.caption && step.caption.length < 160);
-        assert(step.movement || step.result || step.visual);
+        assert(
+          step.movement ||
+            step.result ||
+            step.visual ||
+            (step.type === "linkedQueue" &&
+              step.state &&
+              step.why &&
+              step.title),
+        );
       }
     }
   }

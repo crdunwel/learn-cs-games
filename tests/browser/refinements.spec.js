@@ -34,7 +34,12 @@ test("each Learn example can be stepped forward and backward", async ({
         );
       }
       await expect(
-        page.getByRole("button", { name: "Try a round" }),
+        page.getByRole("button", {
+          name:
+            lesson.steps[0].type === "linkedQueue"
+              ? "Replay example"
+              : "Try a round",
+        }),
       ).toBeVisible();
       await page
         .getByRole("button", { name: "Previous step", exact: false })

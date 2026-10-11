@@ -33,6 +33,7 @@ To export paper evidence, set `SCREENSHOT_DIR` to a scratch/artifact directory a
 | Displayed practice C and sanitizers                    | [practice-native-c](../tests/practice-native-c.test.js), [case builder](../tests/support/practice-cases.js)                               |
 | Exam papers, guard, deadline and grading               | [mock-exam](../tests/mock-exam.test.js), [native exam harness](../scripts/native-exam-validation.mjs)                                     |
 | Causal explanations and all lesson sequences           | [feedback-lessons](../tests/feedback-lessons.test.js)                                                                                     |
+| Linked dequeue instruction states and actual C       | [linked-dequeue](../tests/linked-dequeue.test.js), [guided browser lesson](../tests/browser/linked-dequeue.spec.js)                         |
 | Worksheet transforms and seeds                         | [worksheet](../tests/worksheet.test.js)                                                                                                   |
 | Actual UI flows, responsive layouts, focus, motion     | [browser suites](../tests/browser)                                                                                                        |
 | Context routes and documentation links                 | [context tests](../tests/context.test.js), [context router](../scripts/context.mjs)                                                       |
