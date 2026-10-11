@@ -1,3 +1,4 @@
+import PostfixRules from "./PostfixRules.jsx";
 import { gradeMallocAnswer } from "../engine/mallocAnswer.js";
 import QueueLine from "./QueueLine.jsx";
 import StepReview from "./StepReview.jsx";
@@ -267,6 +268,12 @@ export default function Practice({ game, level, onProgress }) {
         </span>
         <Help key={`${session.round}-${stepIndex}`} label="Show hint">
           {step.hint}
+          {question.type === "postfix" && (
+            <>
+              <hr />
+              <PostfixRules />
+            </>
+          )}
           <hr />
           {step.format === "malloc"
             ? "Correct allocation: 10 XP, or 9 XP if only the semicolon is missing."

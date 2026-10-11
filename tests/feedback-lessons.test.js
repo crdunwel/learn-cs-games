@@ -214,6 +214,12 @@ test("queue feedback distinguishes rear from next insertion and explains FIFO re
 
 test("all stack lessons process every token then visibly flush one operator at a time", () => {
   for (const lesson of postfixLessons) {
+    if (lesson.id === "push-pop-rules") {
+      const expected = convert(lesson.steps[0].tokens);
+      assert.deepEqual(lesson.steps.at(-1).stack, []);
+      assert.deepEqual(lesson.steps.at(-1).output, expected.postfix);
+      continue;
+    }
     const { tokens } = lesson.steps[0];
     const expected = convert(tokens);
     const tokenSteps = lesson.steps.slice(0, tokens.length + 1);

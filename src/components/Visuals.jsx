@@ -78,17 +78,17 @@ export function Stack({ values = [], compact = false, capacity = 8 }) {
     </div>
   );
 }
-export function Tokens({ tokens, stop, checkpointLabel }) {
+export function Tokens({ tokens, stop, checkpointLabel, activeIndex }) {
   const atPoint = Boolean(checkpointLabel && stop > 0);
   return (
     <div
       className={`tokens ${atPoint ? "has-checkpoint" : ""}`}
       tabIndex={0}
-      aria-label={`Expression: ${tokens.join(" ")}. ${atPoint ? `Point ${checkpointLabel} is after token ${stop}, ${tokens[stop - 1]}.` : stop ? `Processed through token ${stop}.` : "No tokens processed."}`}
+      aria-label={`Expression: ${tokens.join(" ")}. ${activeIndex === -1 ? "Input is finished." : Number.isInteger(activeIndex) ? `Currently processing token ${activeIndex + 1}, ${tokens[activeIndex]}.` : atPoint ? `Point ${checkpointLabel} is after token ${stop}, ${tokens[stop - 1]}.` : stop ? `Processed through token ${stop}.` : "No tokens processed."}`}
     >
       {tokens.map((token, i) => {
         const tokenClass =
-          !atPoint && i === stop - 1
+          !atPoint && i === (activeIndex ?? stop - 1)
             ? "token current"
             : i < stop
               ? "token processed"
@@ -152,9 +152,13 @@ export function QueueArray({
             key={pointer}
             className={`queue-pointer ${pointer}-marker ${state.count === 0 ? "is-empty" : ""} ${motion.wrapped.includes(pointer) ? "pointer-wrapped" : ""}`}
             style={{ "--marker-index": Math.max(0, state[pointer]) }}
+            title={
+              state.count
+                ? `${pointer}: ${pointer === "front" ? "next item out" : "last item in"}`
+                : `${pointer}: stored index ${state[pointer]}; queue empty`
+            }
           >
             <span className="marker-full">{pointer.toUpperCase()}</span>
-            <span className="marker-short">{pointer[0].toUpperCase()}</span>
             <span className="marker-arrow">↓</span>
           </span>
         ))}
@@ -203,11 +207,11 @@ export function QueueArray({
       <div className="array-legend">
         <span>
           <b className="legend-front">FRONT</b>{" "}
-          {state.count ? "first item" : "index"}
+          {state.count ? "first item" : "stored index"}
         </span>
         <span>
           <b className="legend-rear">REAR</b>{" "}
-          {state.count ? "last item" : "index"}
+          {state.count ? "last item" : "stored index"}
         </span>
         <span className="queue-fill">
           {state.count}/{state.capacity} filled
@@ -219,7 +223,7 @@ export function QueueArray({
           : full
             ? "Full · remove an item before adding"
             : state.count === 0
-              ? "Empty · neither index points to an item"
+              ? "Empty · indices kept; neither points to an item"
               : ""}
       </div>
     </div>

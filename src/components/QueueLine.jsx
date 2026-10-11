@@ -29,7 +29,11 @@ export default function QueueLine({ items }) {
             </React.Fragment>
           ))
         ) : (
-          <span>Empty queue</span>
+          <div className="fifo-empty">
+            <b>Empty queue</b>
+            <span>FRONT: no item</span>
+            <span>REAR: no item</span>
+          </div>
         )}
       </div>
       <p>{items.length} items · the oldest leaves first</p>

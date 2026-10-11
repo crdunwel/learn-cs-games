@@ -1,4 +1,4 @@
-import { explainToken } from "../games/postfix.js";
+import { explainTokenActions } from "../games/postfix.js";
 import { workedExample } from "./feedback.js";
 
 // These traces are presentation of already independently validated state models.
@@ -8,18 +8,30 @@ export function reviewSteps(question, at) {
     return step.reviewSteps || question.reviewSteps;
   if (question.type === "postfix") {
     const end = step.kind === "stack" ? question.stop : question.tokens.length;
-    const entries = question.tokens.slice(0, end).map((token, i) => ({
-      title: `Read ${token} · token ${i + 1}`,
-      detail: explainToken(question.tokens, i, question.solution),
-      math: `Stack top → bottom: ${[...question.solution.states[i + 1].stack].reverse().join(" ") || "empty"}\nPostfix so far: ${question.solution.states[i + 1].output.join(" ") || "empty"}`,
-    }));
-    if (step.kind === "postfix")
-      entries.push({
-        title: "Finish the expression",
-        detail:
-          "Input is done. Pop the remaining operators from top to bottom into postfix.",
-        math: question.solution.postfix.join(" "),
-      });
+    const entries = question.tokens
+      .slice(0, end)
+      .flatMap((token, i) =>
+        explainTokenActions(question.tokens, i, question.solution).map(
+          (action) => ({
+            title: action.title,
+            detail: action.detail,
+            math: `Stack top → bottom: ${[...action.stack].reverse().join(" ") || "empty"}\nPostfix so far: ${action.output.join(" ") || "empty"}`,
+          }),
+        ),
+      );
+    if (step.kind === "postfix") {
+      const stack = [...question.solution.states.at(-1).stack],
+        output = [...question.solution.states.at(-1).output];
+      while (stack.length) {
+        const operator = stack.pop();
+        output.push(operator);
+        entries.push({
+          title: `End of input · pop ${operator}`,
+          detail: `Append ${operator} from the stack top to postfix. ${stack.length ? "Keep popping the remaining operators." : "The stack is now empty."}`,
+          math: `Stack top → bottom: ${[...stack].reverse().join(" ") || "empty"}\nPostfix: ${output.join(" ")}`,
+        });
+      }
+    }
     return entries;
   }
   const examples = workedExample(question, at);
@@ -31,6 +43,12 @@ export function reviewSteps(question, at) {
     })),
   ];
 }
+const fifoLabels = (items) =>
+  items.length === 0
+    ? "FRONT: no item · REAR: no item"
+    : items.length === 1
+      ? `FRONT + REAR: ${items[0]}`
+      : `FRONT → ${items.join(" → ")} ← REAR`;
 export function queueMoveSteps(entry) {
   const { before, state: after, operation: op, result } = entry;
   if (!before.cells)
@@ -38,7 +56,7 @@ export function queueMoveSteps(entry) {
       {
         title: op.kind === "enqueue" ? "Join the rear" : "Leave the front",
         detail: entry.explanation,
-        math: `Before: ${before.items.join(" → ") || "empty"}\nAfter: ${after.items.join(" → ") || "empty"}`,
+        math: `Before: ${fifoLabels(before.items)}\nAfter: ${fifoLabels(after.items)}`,
       },
     ];
   if (result === "Full" || result === "Empty")
@@ -49,7 +67,7 @@ export function queueMoveSteps(entry) {
           result === "Full"
             ? "All slots are occupied, so enqueue fails."
             : "There is no item to remove, so dequeue fails.",
-        math: `QSize = ${before.count}; capacity = ${before.capacity}.\nfront ${before.front}, rear ${before.rear}, QSize ${before.count}: all unchanged.`,
+        math: `QSize = ${before.count}; capacity = ${before.capacity}.\nFRONT = ${before.front}; REAR = ${before.rear}: unchanged.`,
       },
     ];
   return op.kind === "enqueue"
@@ -58,7 +76,7 @@ export function queueMoveSteps(entry) {
           title: "Advance rear",
           detail:
             "rear names the last occupied item. Move one slot before storing the new item.",
-          math: `rear = (${before.rear} + 1) % ${before.capacity} = ${after.rear}${after.rear === 0 ? " · wraps to index 0" : ""}`,
+          math: `rear = (${before.rear} + 1) % ${before.capacity} = ${after.rear}${after.rear === 0 ? " · wraps to index 0" : ""}\nFRONT = ${after.front}; REAR = ${after.rear}`,
         },
         {
           title: `Store ${op.value}`,
@@ -70,12 +88,12 @@ export function queueMoveSteps(entry) {
         {
           title: `Remove ${result}`,
           detail: `Take the first item from front slot ${before.front}.`,
-          math: `DEQUEUE returns Q[${before.front}] = ${result}`,
+          math: `FRONT = ${before.front}; REAR = ${before.rear}\nDEQUEUE returns Q[${before.front}] = ${result}`,
         },
         {
           title: "Advance front",
           detail: `rear stays ${after.rear}; removing an item does not move rear.`,
-          math: `front = (${before.front} + 1) % ${before.capacity} = ${after.front}${after.front === 0 ? " · wraps to index 0" : ""}\nQSize = ${before.count} − 1 = ${after.count}`,
+          math: `front = (${before.front} + 1) % ${before.capacity} = ${after.front}${after.front === 0 ? " · wraps to index 0" : ""}\nFRONT = ${after.front}; REAR = ${after.rear}\nQSize = ${before.count} − 1 = ${after.count}`,
         },
       ];
 }

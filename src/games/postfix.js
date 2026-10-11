@@ -1,6 +1,34 @@
 import { integer, pick } from "../engine/random.js";
 const precedence = { "+": 1, "-": 1, "*": 2, "/": 2 };
 
+// In this conversion, the stack holds pending operators, never operand values.
+export const postfixRules = [
+  {
+    symbol: "Number or variable",
+    instruction:
+      "Append it directly to postfix. Do not push it onto this stack.",
+  },
+  {
+    symbol: "(",
+    instruction: "Push it. It is a barrier: operators below it must wait.",
+  },
+  {
+    symbol: "+ − × ÷",
+    instruction:
+      "Compare the incoming operator with the stack top. While the top has higher or equal precedence, pop it into postfix and compare again. Stop at ( or a lower-precedence operator, then push the incoming operator.",
+  },
+  {
+    symbol: ")",
+    instruction:
+      "Pop operators into postfix until (. Discard the matching (. Never push ) or put either parenthesis in postfix.",
+  },
+  {
+    symbol: "End of input",
+    instruction:
+      "Pop every remaining operator into postfix, from top to bottom.",
+  },
+];
+
 // States are AFTER each whole token, BEFORE the final flush; stacks are bottom-first internally.
 export function convert(tokens) {
   const stack = [],
@@ -36,7 +64,7 @@ export function convert(tokens) {
   return { states, postfix: output };
 }
 
-// One causal sentence per processed token; shared by lessons and answer feedback.
+// One short causal caption per token; expanded actions show every repeated comparison.
 export function explainToken(tokens, index, solution) {
   const token = tokens[index];
   const before = solution.states[index];
@@ -44,17 +72,91 @@ export function explainToken(tokens, index, solution) {
   if (/^[A-Z]$|^\d+$/.test(token))
     return `${token} goes straight to postfix; operands never enter the operator stack.`;
   if (token === "(")
-    return "Push (; it blocks operators below it from being popped.";
+    return "Push (; it is a barrier. Operators below it must wait until its matching ).";
   const popped = after.output.slice(before.output.length);
   if (token === ")")
-    return `Pop ${popped.length ? popped.join(" then ") : "nothing"} to postfix, then discard (; parentheses never enter postfix.`;
+    return `Read ): pop ${popped.length ? popped.join(" then ") : "nothing"} into postfix until (; discard (. Never push ) or output parentheses.`;
   if (popped.length) {
-    const equal = precedence[popped.at(-1)] === precedence[token];
-    return `Pop ${popped.join(" then ")} before pushing ${token}: ${equal ? "equal precedence runs left to right" : "higher precedence goes first"}.`;
+    const comparisons = popped.map(
+      (operator) =>
+        `${operator} (${precedence[operator] === precedence[token] ? "equal" : "higher"} precedence)`,
+    );
+    const remaining = before.stack.slice(0, -popped.length);
+    const stop = remaining.at(-1) === "(" ? "; stop at (" : "";
+    return `Incoming ${token}: pop ${comparisons.join(" then ")} into postfix${stop}, then push ${token}.`;
   }
   return before.stack.length && before.stack.at(-1) !== "("
-    ? `Push ${token} above ${before.stack.at(-1)} because it has higher precedence.`
+    ? `Incoming ${token} vs top ${before.stack.at(-1)}: ${token} has higher precedence. Push ${token} above ${before.stack.at(-1)}; keep the lower operator.`
     : `Push ${token}${before.stack.at(-1) === "(" ? " above the ( barrier" : " onto the empty stack"}.`;
+}
+
+export function explainTokenActions(tokens, index, solution) {
+  const token = tokens[index];
+  const before = solution.states[index];
+  const after = solution.states[index + 1];
+  const stack = [...before.stack];
+  const output = [...before.output];
+  const actions = [];
+  const record = (title, detail) =>
+    actions.push({ title, detail, stack: [...stack], output: [...output] });
+  if (/^[A-Z]$|^\d+$/.test(token)) {
+    output.push(token);
+    record(
+      `Read ${token} · append to postfix`,
+      `Append ${token} directly to postfix. The operator stack does not change.`,
+    );
+    return actions;
+  }
+  if (token === "(") {
+    stack.push(token);
+    record(
+      "Read ( · push",
+      "Push (. It blocks access to the operators below it.",
+    );
+    return actions;
+  }
+  const popped = after.output.slice(before.output.length);
+  if (token === ")") {
+    for (const operator of popped) {
+      stack.pop();
+      output.push(operator);
+      record(
+        `Read ) · pop ${operator}`,
+        `Pop ${operator} from the top into postfix. Keep popping until the matching (.`,
+      );
+    }
+    stack.pop();
+    record(
+      "Read ) · discard (",
+      "The top is now (. Discard it. Do not push ); neither parenthesis belongs in postfix.",
+    );
+    return actions;
+  }
+  for (const operator of popped) {
+    const comparison =
+      precedence[operator] === precedence[token]
+        ? "equal precedence, so the earlier operator goes first"
+        : "higher precedence";
+    stack.pop();
+    output.push(operator);
+    record(
+      `Incoming ${token} · pop ${operator}`,
+      `Incoming ${token} vs top ${operator}: the top has ${comparison}. Pop ${operator} into postfix, then compare again.`,
+    );
+  }
+  const top = stack.at(-1);
+  const reason =
+    top === "("
+      ? "Stop at (. Do not pop across this barrier."
+      : top
+        ? `Incoming ${token} vs top ${top}: the top has lower precedence. Keep ${top} on the stack.`
+        : "The stack is empty; there is nothing else to pop.";
+  stack.push(token);
+  record(
+    `Incoming ${token} · push`,
+    `${reason} Push the incoming ${token}; it waits for a later operator, closing parenthesis, or the end.`,
+  );
+  return actions;
 }
 
 export function generatePostfix(rng, level) {
@@ -122,6 +224,17 @@ function stackLesson(id, title, summary, expression) {
     caption: index
       ? explainToken(tokens, index - 1, solution)
       : "Read left to right. The stack starts empty.",
+    actionSteps: index
+      ? explainTokenActions(tokens, index - 1, solution)
+      : [
+          {
+            title: "Start with an empty stack and output",
+            detail:
+              "Read one token at a time, from left to right. Postfix is the output being built; the stack temporarily holds waiting operators.",
+            stack: [],
+            output: [],
+          },
+        ],
   }));
   const stack = [...solution.states.at(-1).stack];
   const output = [...solution.states.at(-1).output];
@@ -135,7 +248,16 @@ function stackLesson(id, title, summary, expression) {
       stack: [...stack],
       output: [...output],
       movement: `Finish · pop ${operator}`,
+      activeIndex: -1,
       caption: `Input is finished. Pop ${operator} from the top into postfix${stack.length ? "; keep going" : "; the stack is now empty"}.`,
+      actionSteps: [
+        {
+          title: `End of input · pop ${operator}`,
+          detail: `No input remains. Pop ${operator} from the stack top and append it to postfix. ${stack.length ? "Repeat until the stack is empty." : "The stack is empty; the postfix expression is complete."}`,
+          stack: [...stack],
+          output: [...output],
+        },
+      ],
     });
   }
   const stackCapacity = Math.max(6, ...steps.map((step) => step.stack.length));
@@ -164,12 +286,41 @@ export const postfixLessons = [
     "9 - 4 - 2",
   ),
   stackLesson(
+    "push-pop-rules",
+    "When to push and pop",
+    "Compare operators, respect parentheses, and finish the stack.",
+    "2 + 3 * 4 - ( 5 - 1 )",
+  ),
+  stackLesson(
     "sample-checkpoint",
     "Exam-style checkpoint",
     "Point A is after +, before 6.",
     "1 * ( 7 - 4 ) / ( 5 + 6 )",
   ),
 ];
+// The rule tour pauses on each elementary action, including repeated pops.
+const rulesLesson = postfixLessons.find(
+  (lesson) => lesson.id === "push-pop-rules",
+);
+rulesLesson.steps = rulesLesson.steps.flatMap((step) =>
+  step.actionSteps.map((action, i) => ({
+    ...step,
+    caption: action.detail,
+    movement: action.title,
+    activeIndex: step.movement.startsWith("Finish")
+      ? -1
+      : step.stop
+        ? step.stop - 1
+        : undefined,
+    stop:
+      i === step.actionSteps.length - 1
+        ? step.stop
+        : Math.max(0, step.stop - 1),
+    stack: [...action.stack],
+    output: [...action.output],
+    actionSteps: [action],
+  })),
+);
 // The sample marks A between + and 6; it is not an operand to read.
 const checkpointLesson = postfixLessons.at(-1);
 checkpointLesson.steps.forEach((step) => {

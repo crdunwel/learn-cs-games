@@ -1,3 +1,4 @@
+import PostfixRules from "./PostfixRules.jsx";
 import QueueLine from "./QueueLine.jsx";
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { Stack, Tokens, QueueArray, Growth } from "./Visuals.jsx";
@@ -125,14 +126,16 @@ export default function Tutorial({ game, onComplete }) {
             Step {index + 1} / {lesson.steps.length}
           </span>
           <Help label="About this example">
-            {game.id === "queue" && step.state?.items
-              ? "This is an ordinary FIFO queue. ENQUEUE joins the rear; DEQUEUE removes the front. These labels name items, not array indices."
-              : game.id === "queue"
-                ? "front is the first item’s index; rear is the last item’s index, as in Lab 6 Q3. QSize counts items. When empty, this app keeps front and sets rear = (front − 1 + capacity) % capacity; neither points to an item. A blank cell means no active queue item."
-                : game.id === "postfix"
-                  ? "This is the operator stack for infix-to-postfix conversion. Numbers go directly to postfix. Read everything before a checkpoint letter; the letter itself is not a token."
-                  : game.help ||
-                    "Choose the tightest Big-O bound. Assume positive input sizes and constant-time work(). Scaling examples use an exact work model."}
+            {game.id === "queue" && step.state?.items ? (
+              "This is an ordinary FIFO queue. ENQUEUE joins the rear; DEQUEUE removes the front. These labels name items, not array indices."
+            ) : game.id === "queue" ? (
+              "front is the first item’s index; rear is the last item’s index, as in Lab 6 Q3. QSize counts items. When empty, this app keeps front and sets rear = (front − 1 + capacity) % capacity; neither points to an item. A blank cell means no active queue item."
+            ) : game.id === "postfix" ? (
+              <PostfixRules />
+            ) : (
+              game.help ||
+              "Choose the tightest Big-O bound. Assume positive input sizes and constant-time work(). Scaling examples use an exact work model."
+            )}
           </Help>
         </div>
       </div>
@@ -200,6 +203,7 @@ function TutorialScene({ step, game, index }) {
           <Tokens
             tokens={step.tokens}
             stop={step.stop}
+            activeIndex={step.activeIndex}
             checkpointLabel={
               step.checkpoint?.after === step.stop
                 ? step.checkpoint.label

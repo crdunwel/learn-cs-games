@@ -33,3 +33,5 @@ C source uses preserved lines in a focusable horizontal scroll region. Never bre
 Full-postfix entry shows the whole expression without a checkpoint marker or partial operator stack. The scene reserves the first stack phase's measured height so advancing does not move the Check button. Source/answer regions and the feedback dock stay fixed within the question.
 
 Tutorials measure the largest actual scene and caption **within the selected lesson**, then align current content at the top. Different lessons may need different height; navigation must remain stable through that lesson. Hidden Learn panels skip zero-width measurements. Observers reattach when lessons change; measurement nodes are clipped, inert and removed after sizing. Do not restore a global 720px centered region to achieve stability: that creates empty space before short C examples.
+
+Queue pointer labels are permanent orientation cues. Never hide them on empty states or replace them with single letters on phones; state notes and dashed empty-index badges distinguish retained indices from actual items. Ordinary review math names FRONT/REAR in both before and after lines.
