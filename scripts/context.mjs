@@ -116,8 +116,14 @@ export const routes = [
       "binary digits",
     ],
     ["docs/games/bases.md"],
-    ["src/games/bases.js"],
     [
+      "src/games/bases.js",
+      "src/engine/baseWork.js",
+      "src/components/BaseWork.jsx",
+    ],
+    [
+      "tests/base-work.test.js",
+      "tests/browser/base-work.spec.js",
       "tests/recursion-bases.test.js",
       "tests/answer-formats.test.js",
       "tests/memory-variety.test.js",

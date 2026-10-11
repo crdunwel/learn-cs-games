@@ -32,7 +32,24 @@ test("all five new games are playable at every level and retain earned progress"
         .selectOption(String(level));
       const question = game.generate(() => 0.4, level),
         step = question.steps[0];
-      if (step.kind === "input")
+      if (step.work) {
+        for (const row of step.work.source)
+          await page
+            .getByLabel(`Product at ${step.work.from}^${row.exponent}`, {
+              exact: true,
+            })
+            .fill(String(row.product));
+        await page
+          .getByLabel("Decimal total", { exact: true })
+          .fill(String(question.data.value));
+        if (step.work.to !== 10)
+          for (const row of step.work.target)
+            await page
+              .getByLabel(`Digit at ${step.work.to}^${row.exponent}`, {
+                exact: true,
+              })
+              .fill(row.digit);
+      } else if (step.kind === "input")
         await page
           .getByLabel("Your answer", { exact: true })
           .fill(` ${step.answer} `);

@@ -2,7 +2,9 @@
 
 ## Practice
 
-[session.js](../src/engine/session.js) is a pure reducer. A session tracks question, step, round, draft, status, `allCorrect`, and earned XP. Legal statuses are answering → correct / incorrect / revealed. Only an answering state accepts a check or reveal; repeated events cannot award XP twice. Correct checks earn 10 XP per step. Incorrect checks and reveals earn none and permanently make this round imperfect. Next advances a checked step or generates a fresh round.
+[session.js](../src/engine/session.js) is a pure reducer. Basecamp initializes a structured place-value draft with blank products, total and target digits; checking/revealing locks the entire form and still awards at most 10 XP for the single conversion.
+
+A session tracks question, step, round, draft, status, `allCorrect`, and earned XP. Legal statuses are answering → correct / incorrect / revealed. Only an answering state accepts a check or reveal; repeated events cannot award XP twice. Correct checks earn 10 XP per step. Incorrect checks and reveals earn none and permanently make this round imperfect. Next advances a checked step or generates a fresh round.
 
 [Practice.jsx](../src/components/Practice.jsx) keeps a ref to the latest session so rapid events cannot use stale state. It applies only the change in earned XP and records a round once at its final checked/revealed step. [progress.js](../src/engine/progress.js) increments rounds, wins for perfect rounds, current streak, and best streak. The suggested level is `min(3, 1 + floor(wins / 4))`; levels remain manually selectable. Completing a tutorial marks the game's tutorial flag, not every individual lesson.
 

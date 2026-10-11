@@ -674,6 +674,36 @@ function bases(q) {
     "base conversion changed value",
   );
   need(q.steps[0].radix === to, "answer radix");
+  // Derive positions from right to left by repeated multiplication, independently
+  // of the generator's power/exponent helper. Bind every displayed row to digits.
+  const work = q.steps[0].work;
+  need(work?.from === from && work?.to === to, "place-value bases");
+  for (const [text, base, rows] of [
+    [source, from, work.source],
+    [q.steps[0].answer, to, work.target],
+  ]) {
+    need(
+      Array.isArray(rows) && rows.length === text.length,
+      "place-value row count",
+    );
+    let weight = 1,
+      sum = 0;
+    for (let i = text.length - 1, power = 0; i >= 0; i--, power++) {
+      const digit = "0123456789ABCDEF".indexOf(text[i]),
+        row = rows[i];
+      need(
+        row.digit === text[i] &&
+          row.value === digit &&
+          row.exponent === power &&
+          row.weight === weight &&
+          row.product === digit * weight,
+        "place-value row",
+      );
+      sum += row.product;
+      weight *= base;
+    }
+    need(sum === value, "place-value sum");
+  }
 }
 const validators = {
   postfix,

@@ -1,3 +1,4 @@
+import { baseWork } from "../engine/baseWork.js";
 import { integer, pick } from "../engine/random.js";
 
 const digits = "0123456789ABCDEF";
@@ -69,7 +70,8 @@ export function generateBases(rng, level = 1) {
         prompt: `Convert ${source} from base ${from} to base ${to}.`,
         answer,
         radix: to,
-        hint: `Write just the base-${to} digits. Spaces and letter case do not matter.${to === 16 ? " A = 10, B = 11, …, F = 15." : ""}`,
+        work: baseWork(source, from, answer, to),
+        hint: `Each source digit multiplies ${from} raised to its position. The rightmost position is 0, so its multiplier is 1. Add those products in decimal, then fill the base-${to} positions from largest to smallest.`,
         explanation,
         illustration,
       },

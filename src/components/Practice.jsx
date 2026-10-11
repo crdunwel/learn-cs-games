@@ -1,3 +1,5 @@
+import BaseWork from "./BaseWork.jsx";
+import { baseWorkResult, baseWorkFeedback } from "../engine/baseWork.js";
 import React, { useEffect, useRef, useState } from "react";
 import { startSession, sessionReducer } from "../engine/session.js";
 import { explainMistake, workedExample } from "../engine/feedback.js";
@@ -134,6 +136,8 @@ function QueueScene({ question, checked, draft, onSelect }) {
 }
 
 function displayAnswer(step, draft) {
+  if (step.work && draft && typeof draft === "object")
+    return baseWorkResult(step.work, draft) || "empty";
   if (Array.isArray(draft)) return draft.join(" ") || "empty";
   return step.optionLabels?.[draft] || draft || "empty";
 }
@@ -178,7 +182,7 @@ export default function Practice({ game, level, onProgress }) {
   }
   return (
     <section
-      className={`play-panel practice-panel practice-${question.type}`}
+      className={`play-panel practice-panel practice-${question.type} ${step.work ? "practice-base-work" : ""}`}
       aria-label={`${game.title} practice`}
     >
       <div className="panel-top">
@@ -328,13 +332,22 @@ export default function Practice({ game, level, onProgress }) {
               </div>
             </div>
           ))}
-        {question.type === "trace" && (
+        {question.type === "trace" && !step.work && (
           <div className="trace-scene">
             {question.code && <CodeBlock code={question.code} />}
             <TraceVisual visual={question.visual} />
           </div>
         )}
-        {step.kind === "input" && (
+        {step.work && (
+          <BaseWork
+            key={session.round}
+            step={step}
+            draft={draft}
+            onChange={setDraft}
+            status={status}
+          />
+        )}
+        {step.kind === "input" && !step.work && (
           <div className="answer-field trace-answer">
             <label htmlFor="short-answer">Your answer</label>
             <input
@@ -405,8 +418,8 @@ export default function Practice({ game, level, onProgress }) {
               : ""}
           </strong>
           <p
-            className={`answer-comparison ${status !== "incorrect" ? "is-inactive" : ""}`}
-            aria-hidden={status !== "incorrect"}
+            className={`answer-comparison ${status !== "incorrect" || step.work ? "is-inactive" : ""}`}
+            aria-hidden={status !== "incorrect" || !!step.work}
           >
             You: <b>{displayAnswer(step, draft)}</b> · Correct:{" "}
             <b>{displayAnswer(step, step.answer)}</b>
@@ -418,15 +431,27 @@ export default function Practice({ game, level, onProgress }) {
           >
             {checked
               ? status === "incorrect"
-                ? explainMistake(question, stepIndex, draft)
-                : step.explanation
+                ? step.work
+                  ? baseWorkFeedback(step.work, draft)
+                  : explainMistake(question, stepIndex, draft)
+                : step.work
+                  ? "Each digit × its place value makes a product. Add the products: both bases describe the same number."
+                  : step.explanation
               : ""}
           </p>
           <div className="feedback-illustration" aria-label="Worked example">
             {checked &&
+              !step.work &&
               workedExample(question, stepIndex).map((item, index) => (
                 <span key={index}>{item}</span>
               ))}
+            {checked && step.work && (
+              <p className="base-work-summary">
+                {question.data.source} (base {question.data.from}) ={" "}
+                {question.data.value} (decimal) = {step.answer} (base{" "}
+                {step.radix})
+              </p>
+            )}
           </div>
         </div>
         <div className="dock-actions">
