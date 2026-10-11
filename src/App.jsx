@@ -1,4 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from "react";
 import { games, gameById } from "./games/index.js";
 import {
   freshStats,
@@ -13,8 +18,10 @@ import Practice from "./components/Practice.jsx";
 import Help from "./components/Help.jsx";
 import Exam from "./components/Exam.jsx";
 import PrintPractice from "./components/PrintPractice.jsx";
+import CodingStudio from "./components/CodingStudio.jsx";
+import { parseHashRoute, tutorialHash, practiceHash } from "./engine/routes.js";
 function readRoute() {
-  return gameById(window.location.hash.slice(1))?.id || "";
+  return parseHashRoute(window.location.hash, games);
 }
 function getStorage() {
   try {
@@ -24,9 +31,32 @@ function getStorage() {
   }
 }
 
-function Game({ game, progress, onProgress }) {
+function Game({ game, route, progress, onProgress }) {
   const stats = progress.games[game.id] || freshStats();
-  const [mode, setMode] = useState(stats.tutorial ? "practice" : "tutorial");
+  const [mode, setMode] = useState(
+    route.mode || (stats.tutorial ? "practice" : "tutorial"),
+  );
+  const [lessonId, setLessonId] = useState(
+    route.lessonId || game.lessons?.[0]?.id || "basics",
+  );
+  useLayoutEffect(() => {
+    // Every hash event is authoritative, including a fast Back to the same
+    // route before the preceding hashchange event had a chance to render.
+    if (route.mode) setMode(route.mode);
+    if (route.lessonId) setLessonId(route.lessonId);
+  }, [route]);
+  function changeMode(nextMode) {
+    setMode(nextMode);
+    window.location.hash =
+      nextMode === "tutorial"
+        ? tutorialHash(game.id, lessonId)
+        : practiceHash(game.id);
+  }
+  function changeLesson(nextLessonId) {
+    setLessonId(nextLessonId);
+    setMode("tutorial");
+    window.location.hash = tutorialHash(game.id, nextLessonId);
+  }
   const [level, setLevel] = useState(suggestedLevel(stats));
   const [attempt, setAttempt] = useState(0);
   return (
@@ -47,13 +77,13 @@ function Game({ game, progress, onProgress }) {
         <div className="mode-tabs" aria-label="Game mode">
           <button
             aria-pressed={mode === "tutorial"}
-            onClick={() => setMode("tutorial")}
+            onClick={() => changeMode("tutorial")}
           >
             Learn
           </button>
           <button
             aria-pressed={mode === "practice"}
-            onClick={() => setMode("practice")}
+            onClick={() => changeMode("practice")}
           >
             Play
           </button>
@@ -81,9 +111,11 @@ function Game({ game, progress, onProgress }) {
       <div hidden={mode !== "tutorial"}>
         <Tutorial
           game={game}
+          lessonId={lessonId}
+          onLessonChange={changeLesson}
           onComplete={() => {
             onProgress((p) => finishTutorial(p, game.id));
-            setMode("practice");
+            changeMode("practice");
           }}
         />
       </div>
@@ -125,8 +157,13 @@ export default function App() {
   }, []);
   useEffect(() => {
     const change = () => {
-      setRoute(readRoute());
-      window.scrollTo(0, 0);
+      const next = readRoute();
+      setRoute((current) => {
+        // Examples share one mounted game: preserve drafts and scroll position.
+        if (current.kind !== next.kind || current.gameId !== next.gameId)
+          window.scrollTo(0, 0);
+        return next;
+      });
     };
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
@@ -134,7 +171,7 @@ export default function App() {
   useEffect(() => {
     setSaved(saveProgress(getStorage(), progress));
   }, [progress]);
-  const game = gameById(route);
+  const game = route.kind === "game" ? gameById(route.gameId) : null;
   const wins = Object.values(progress.games).reduce(
     (sum, stats) => sum + stats.wins,
     0,
@@ -166,12 +203,15 @@ export default function App() {
           </span>
         </div>
       </header>
-      {game?.kind === "exam" ? (
+      {route.kind === "code" ? (
+        <CodingStudio exerciseId={route.exerciseId} />
+      ) : game?.kind === "exam" ? (
         <Exam onExamChange={onExamChange} />
       ) : game ? (
         <Game
           key={game.id}
           game={game}
+          route={route}
           progress={progress}
           onProgress={setProgress}
         />
@@ -199,6 +239,16 @@ export default function App() {
               <span>YOU’VE GOT THIS</span>
             </div>
           </section>
+          <a className="coding-home-card" href="#code">
+            <div>
+              <span className="eyebrow">C WRITING STUDIO</span>
+              <h2>Turn the idea into code.</h2>
+              <p>Write C one line at a time, then try it on paper.</p>
+            </div>
+            <span className="play-link">
+              Start writing <span aria-hidden="true">↗</span>
+            </span>
+          </a>
           <section aria-label="Practice games">
             <div className="section-heading">
               <h2>

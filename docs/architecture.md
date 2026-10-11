@@ -25,3 +25,7 @@ Practice reads `game.generate(rng, level)` through the registry wrapper, which c
 [styles.css](../src/styles.css) contains shared and topic styles. [exam.css](../src/exam.css) contains the dark exam shell and light review panels. [print.css](../src/print.css) isolates the portal document for print. [Visuals.jsx](../src/components/Visuals.jsx) handles stacks, circular arrays and growth art; [TraceVisual.jsx](../src/components/TraceVisual.jsx) handles array/list/flow traces. Inspect computed styles as well as selectors when changing cross-theme code colors.
 
 Random helpers in [random.js](../src/engine/random.js) accept an injected RNG. Tests, worksheets, and exams use seeds; interactive practice uses `Math.random`. Determinism requires preserving RNG call order as well as template text. Exam IDs are a saved-paper compatibility boundary; see [state](state.md).
+
+## Standalone C writing and tutorial routes
+
+[Hash routing](../src/engine/routes.js) supports every tutorial example and the standalone `#code` module; [route contracts](tutorial-links.md) preserve old game links. [C Writing Studio](c-writing.md) has its own finite authored catalog, bounded checker, draft store and print view. It is outside the generated practice registry, so THE EXAM stays ninth and existing generation guards remain unchanged.

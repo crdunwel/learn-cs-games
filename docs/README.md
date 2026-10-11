@@ -17,6 +17,11 @@ Read [the agent entrypoint](../AGENTS.md) first. Use `./scripts/context "task"` 
 | Add a question family, lesson, or entire game safely               | [Extension guide](extending.md)   |
 | CI, publishing, Pages configuration, rollback                      | [Deployment](deployment.md)       |
 
+## Learning modules
+
+- [C Writing Studio](c-writing.md) — 60 distinct guided C implementations, raw writing and paper practice
+- [Shareable tutorial links](tutorial-links.md) — stable links for every example and coding problem
+
 ## Topic games
 
 - [Stack & Slay](games/postfix.md)

@@ -28,3 +28,7 @@ On load, Exam regenerates a validated paper from its saved seed and checks its i
 The timer is a practice aid, not an anti-cheating clock: changing the device clock or localStorage is outside the guarantee. Exam points never modify arcade XP. Automatic and manual score subtotals remain separate; pending self-review is clearly labeled.
 
 Tests: [progress](../tests/progress.test.js), [exam reducers and papers](../tests/mock-exam.test.js), [browser exam persistence](../tests/browser/mock-exam.spec.js), [arcade](../tests/browser/arcade.spec.js), [refinements](../tests/browser/refinements.spec.js).
+
+## C writing drafts
+
+[C Writing Studio](c-writing.md) stores fingerprinted problem drafts separately in `cs-club-c-writing-v1`. It recomputes recognized completion and keeps self-review distinct. It does not change arcade XP, exam state, or practice drafts.

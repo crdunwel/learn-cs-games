@@ -24,6 +24,19 @@ test("built app loads all nine routes and assets under the Pages subdirectory", 
   }
   await page.reload();
   await expect(page.getByRole("heading", { name: "THE EXAM." })).toBeVisible();
+  await page.goto("./#queue/learn/linked-dequeue-three");
+  await expect(
+    page.getByRole("button", { name: "Copy lesson link", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".tutorial-linked")).toBeVisible();
+  await page.goto("./#code/queue-doubly-dequeue");
+  await expect(
+    page.getByRole("heading", { name: "C Writing Studio", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Coding problem", { exact: true })).toHaveValue(
+    "queue-doubly-dequeue",
+  );
   await page.setViewportSize({ width: 320, height: 800 });
   expect(
     await page.evaluate(

@@ -21,6 +21,40 @@ const route = (id, title, keywords, docs, source, tests) => ({
 });
 export const routes = [
   route(
+    "c-writing",
+    "Guided C writing",
+    [
+      "c writing",
+      "code writing",
+      "coding problem",
+      "coding studio",
+      "handwritten",
+      "line by line",
+    ],
+    ["docs/c-writing.md"],
+    [
+      "src/engine/cWriting.js",
+      "src/components/CodingStudio.jsx",
+      "src/components/CodingPrint.jsx",
+      "src/data/cWritingStructures.js",
+      "src/data/cWritingAlgorithms.js",
+    ],
+    [
+      "tests/c-writing.test.js",
+      "tests/c-writing-structures.test.js",
+      "tests/c-writing-algorithms.test.js",
+      "tests/browser/c-writing.spec.js",
+    ],
+  ),
+  route(
+    "tutorial-links",
+    "Shareable tutorial examples",
+    ["deep link", "shareable", "lesson link", "tutorial link", "unique uri"],
+    ["docs/tutorial-links.md"],
+    ["src/engine/routes.js", "src/App.jsx", "src/components/Tutorial.jsx"],
+    ["tests/routes.test.js", "tests/browser/tutorial-links.spec.js"],
+  ),
+  route(
     "postfix",
     "Stacks and postfix",
     ["stack", "postfix", "infix", "precedence", "checkpoint", "associativ"],

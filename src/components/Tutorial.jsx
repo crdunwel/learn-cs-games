@@ -7,8 +7,14 @@ import CodeBlock from "./CodeBlock.jsx";
 import TraceVisual from "./TraceVisual.jsx";
 import LinkedDequeue from "./LinkedDequeue.jsx";
 import { linkedDequeueCode } from "../engine/linkedDequeue.js";
+import { tutorialHash } from "../engine/routes.js";
 
-export default function Tutorial({ game, onComplete }) {
+export default function Tutorial({
+  game,
+  lessonId,
+  onLessonChange,
+  onComplete,
+}) {
   const lessons = game.lessons || [
     {
       id: "basics",
@@ -17,8 +23,24 @@ export default function Tutorial({ game, onComplete }) {
       steps: game.tutorial,
     },
   ];
-  const [lessonIndex, setLessonIndex] = useState(0);
+  const [lessonIndex, setLessonIndex] = useState(() =>
+    Math.max(
+      0,
+      lessons.findIndex((item) => item.id === lessonId),
+    ),
+  );
   const [index, setIndex] = useState(0);
+  const [shareStatus, setShareStatus] = useState("");
+  const [shareFallback, setShareFallback] = useState(false);
+  useLayoutEffect(() => {
+    const nextIndex = lessons.findIndex((item) => item.id === lessonId);
+    if (nextIndex >= 0 && nextIndex !== lessonIndex) {
+      setLessonIndex(nextIndex);
+      setIndex(0);
+      setShareStatus("");
+      setShareFallback(false);
+    }
+  }, [lessonId, lessonIndex, lessons]);
   const lesson = lessons[lessonIndex];
   const step = lesson.steps[index];
   const last = index === lesson.steps.length - 1;
@@ -98,8 +120,29 @@ export default function Tutorial({ game, onComplete }) {
   }, [layoutKey, lesson, layout]);
 
   function selectLesson(value) {
-    setLessonIndex(Number(value));
+    const next = Number(value);
+    if (!lessons[next]) return;
+    setLessonIndex(next);
     setIndex(0);
+    setShareStatus("");
+    setShareFallback(false);
+    onLessonChange?.(lessons[next].id);
+  }
+  const shareUrl = new URL(
+    tutorialHash(game.id, lesson.id),
+    window.location.href,
+  ).href;
+  async function copyLessonLink() {
+    try {
+      if (!navigator.clipboard?.writeText)
+        throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(shareUrl);
+      setShareStatus("Lesson link copied.");
+      setShareFallback(false);
+    } catch {
+      setShareStatus("Select and copy this lesson link.");
+      setShareFallback(true);
+    }
   }
   return (
     <section
@@ -131,7 +174,32 @@ export default function Tutorial({ game, onComplete }) {
             Dequeue in C →
           </button>
         )}
+        <button
+          type="button"
+          className="quiet-button lesson-share-button"
+          onClick={copyLessonLink}
+          aria-label="Copy lesson link"
+        >
+          <span aria-hidden="true">↗</span> Copy lesson link
+        </button>
       </div>
+      {shareStatus && (
+        <p className="lesson-share-feedback" role="status">
+          {shareStatus}
+        </p>
+      )}
+      {shareFallback && (
+        <label className="lesson-share-fallback">
+          Lesson link
+          <input
+            className="lesson-share-url"
+            value={shareUrl}
+            readOnly
+            onFocus={(event) => event.target.select()}
+            onClick={(event) => event.target.select()}
+          />
+        </label>
+      )}
       <p className="lesson-summary">{lesson.summary}</p>
       <div className="panel-top">
         <span className="eyebrow">ONE MOVE AT A TIME</span>

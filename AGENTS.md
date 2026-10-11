@@ -1,6 +1,6 @@
 # Agent entrypoint
 
-CS Club is a small, local-first React/Vite study arcade: eight generated practice games, a timed mock exam, and printable question papers. It has no backend and never executes student C.
+CS Club is a small, local-first React/Vite study arcade: eight generated practice games, a timed mock exam, and printable question papers. It also includes a 60-problem C Writing Studio with guided and full-function writing. It has no backend and never executes student C.
 
 ## Hydrate only what the task needs
 
@@ -14,6 +14,7 @@ CS Club is a small, local-first React/Vite study arcade: eight generated practic
 - Preserve user work and existing browser progress. Never clear localStorage to make a test pass in a user's tab.
 - Every generated practice question and exam must pass its independent validator before delivery. Do not bypass guards, import the generator's solver into its validator, or retry around validation failures. See [correctness](docs/correctness.md).
 - Grade meaning, not cosmetic formatting. Practice and exam share [answerFormats.js](src/engine/answerFormats.js). Short malloc practice uses the bounded [malloc parser](src/engine/mallocAnswer.js); a correct allocation missing only a semicolon earns 9/10 XP. Free-form exam C stays rubric/self-reviewed. Never execute student C or imply arbitrary C was automatically proven.
+- C Writing Studio uses a finite authored catalog and a bounded token comparator. Unknown implementations require review, never an automatic wrong grade. See [C writing](docs/c-writing.md) and [tutorial links](docs/tutorial-links.md).
 - Preserve [stack conventions](docs/games/postfix.md), [queue conventions](docs/games/queue.md), absolute exam deadlines, answer locking, and once-only XP. The relevant invariants are documented under [state](docs/state.md) and [game contracts](docs/contracts.md).
 - Keep controls stable within a question, support keyboard/touch and 320px screens, respect reduced motion, and keep printed papers monochrome. See [UI](docs/ui.md) and [printing](docs/printing.md).
 - Publishing is a push-triggered action. Read [deployment](docs/deployment.md) before changing release behavior; only push or change repository settings within the user's authorization.
