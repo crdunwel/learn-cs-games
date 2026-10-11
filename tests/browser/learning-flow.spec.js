@@ -50,6 +50,9 @@ test("ordinary queue asks about FIFO values without array indices", async ({
     .click();
   await expect(page.locator(".queue-move-detail")).toContainText("Before:");
   await expect(page.locator(".queue-move-detail")).toContainText("After:");
+  await expect(
+    page.locator(".practice-panel:visible .fifo-item small"),
+  ).toHaveText("FRONT + REAR");
 });
 test("decimal base conversion starts at target digits and has no decimal expansion inputs", async ({
   page,

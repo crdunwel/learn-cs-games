@@ -17,11 +17,13 @@ export default function QueueLine({ items }) {
               <div className="fifo-item">
                 <b>{item}</b>
                 <small>
-                  {i === 0
-                    ? "FRONT"
-                    : i === items.length - 1
-                      ? "REAR"
-                      : "\u00a0"}
+                  {items.length === 1
+                    ? "FRONT + REAR"
+                    : i === 0
+                      ? "FRONT"
+                      : i === items.length - 1
+                        ? "REAR"
+                        : "\u00a0"}
                 </small>
               </div>
             </React.Fragment>
