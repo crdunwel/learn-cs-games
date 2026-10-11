@@ -1,0 +1,621 @@
+/* Screen controls stay outside the monochrome document and never print. */
+.print-launch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  border: 1px solid #d9d3c8;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #292821;
+  padding: 0.55rem 0.85rem;
+  font: inherit;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.print-launch svg {
+  flex: none;
+}
+.print-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  padding: clamp(8px, 2vw, 24px);
+  background: rgb(24 24 23 / 0.5);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  animation: print-appear 160ms ease-out;
+}
+.print-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  min-width: 0;
+  background: #f4f1e9;
+  color: #292821;
+  border-radius: 18px;
+  box-shadow: 0 20px 80px #0004;
+  overflow: hidden;
+}
+.print-controls {
+  flex: none;
+  padding: 18px 24px;
+  border-bottom: 1px solid #d4cfc5;
+  font-family: Arial, sans-serif;
+}
+.print-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.print-title-row h2 {
+  font-family: inherit;
+  font-size: 24px;
+  margin: 0;
+}
+.print-controls p {
+  font-size: 16px;
+  margin: 8px 0 16px;
+  line-height: 1.4;
+}
+.print-close {
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  color: inherit;
+  border: 1px solid #c9c4b9;
+  border-radius: 50%;
+  font-size: 28px;
+  cursor: pointer;
+  flex: none;
+}
+.print-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+}
+.print-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.print-settings select,
+.print-settings button {
+  min-height: 44px;
+  max-width: 100%;
+  border: 1px solid #aaa59a;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 16px;
+  background: white;
+  color: #292821;
+}
+.print-settings button {
+  cursor: pointer;
+}
+.print-settings .print-confirm {
+  background: #292821;
+  color: white;
+  border-color: #292821;
+}
+.print-controls .print-exam-note {
+  margin: 12px 0 0;
+}
+.print-preview {
+  overflow: auto;
+  min-height: 0;
+  padding: 24px;
+  overscroll-behavior: contain;
+}
+.worksheet {
+  box-sizing: border-box;
+  width: min(100%, 8.5in);
+  margin: 0 auto;
+  padding: 0.55in 0.6in;
+  background: white;
+  color: black;
+  box-shadow: 0 2px 12px #0001;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 1.35;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.worksheet * {
+  box-sizing: border-box;
+}
+.worksheet h1 {
+  margin: 8pt 0 14pt;
+  font-family: inherit;
+  font-size: 20pt;
+  font-weight: bold;
+  line-height: 1.15;
+  letter-spacing: normal;
+  color: black;
+}
+.worksheet h2 {
+  margin: 0 0 10pt;
+  font-family: inherit;
+  font-size: 13pt;
+  line-height: 1.3;
+  letter-spacing: normal;
+  color: black;
+  font-weight: bold;
+}
+.worksheet h3 {
+  margin: 12pt 0 8pt;
+  font-family: inherit;
+  font-size: 12pt;
+  line-height: 1.35;
+  font-weight: normal;
+  color: black;
+}
+.worksheet p {
+  margin: 8pt 0;
+  color: black;
+  font: inherit;
+}
+.paper-id {
+  font-size: 9pt !important;
+}
+.paper-name {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10pt;
+  margin: 14pt 0;
+}
+.paper-heading {
+  border-bottom: 1pt solid black;
+  padding-bottom: 12pt;
+  margin-bottom: 20pt;
+}
+.paper-question {
+  margin-top: 20pt;
+  padding-bottom: 24pt;
+  break-inside: avoid;
+}
+.paper-question + .paper-question {
+  border-top: 1px dashed #b5b5b5;
+  padding-top: 24pt;
+}
+.paper-code,
+.paper-answer pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: "Courier New", monospace;
+  font-size: 10pt;
+  line-height: 1.35;
+  padding: 8pt 0;
+  margin: 8pt 0;
+  border: 0;
+  background: white;
+  color: black;
+}
+.paper-infix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 7pt;
+  font:
+    bold 13pt/2 "Courier New",
+    monospace;
+  margin: 22pt 0 15pt;
+}
+.paper-marker {
+  position: relative;
+  top: -9pt;
+  line-height: 1;
+  font:
+    bold 12pt "Times New Roman",
+    serif;
+  margin-left: -4pt;
+}
+.paper-stacks {
+  display: flex;
+  justify-content: space-around;
+  gap: 20pt;
+  margin: 16pt 0 12pt;
+}
+.paper-stack-wrap {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: 92pt;
+  font-size: 9pt;
+  gap: 4pt;
+}
+.paper-stack-wrap > b {
+  font-size: 13pt;
+  margin-top: 5pt;
+}
+.paper-stack {
+  display: block;
+  width: 100%;
+  height: 162pt;
+  overflow: visible;
+}
+.paper-checkpoint-notes {
+  font-size: 10pt !important;
+}
+.paper-postfix-boxes {
+  display: block;
+  width: 100%;
+  height: 29pt;
+  margin: 8pt 0 20pt;
+  overflow: visible;
+}
+.paper-array {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+  margin: 12pt 0;
+  font:
+    11pt "Courier New",
+    monospace;
+}
+.paper-array td {
+  border: 1pt solid black;
+  height: 28pt;
+  text-align: center;
+  padding: 3pt;
+  color: black;
+}
+.paper-array .paper-indices td {
+  border: 0;
+  height: 18pt;
+  font-size: 9pt;
+}
+.paper-list,
+.paper-operations {
+  font-family: "Courier New", monospace !important;
+  font-size: 10pt !important;
+}
+.paper-options {
+  padding-left: 22pt;
+  margin: 8pt 0;
+}
+.paper-options li {
+  padding-left: 4pt;
+  margin-bottom: 8pt;
+}
+.paper-options li > span {
+  white-space: pre-wrap;
+  font-family: "Courier New", monospace;
+  font-size: 10pt;
+}
+.paper-part {
+  break-inside: avoid;
+}
+.paper-writing {
+  margin: 5pt 0 14pt;
+}
+.paper-writing > div {
+  height: 24pt;
+  border-bottom: 0.5pt solid #999;
+}
+.paper-writing-long > div {
+  height: 23pt;
+}
+.paper-answers .paper-answer {
+  break-inside: avoid;
+  margin-bottom: 20pt;
+}
+.paper-answer pre {
+  font-weight: bold;
+}
+.paper-answer ul {
+  margin: 8pt 0;
+  padding-left: 18pt;
+}
+.worksheet-key .paper-question {
+  padding-bottom: 6pt;
+}
+@keyframes print-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 600px) {
+  .print-launch {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    padding: 0;
+  }
+  .print-launch-label {
+    display: none;
+  }
+  .print-portal {
+    padding: 6px;
+  }
+  .print-dialog {
+    border-radius: 10px;
+  }
+  .print-controls {
+    padding: 12px;
+  }
+  .print-title-row h2 {
+    font-size: 20px;
+  }
+  .print-controls p {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .print-settings {
+    gap: 8px;
+  }
+  .print-settings label {
+    flex: 1 1 100px;
+    min-width: 0;
+  }
+  .print-settings select {
+    width: 100%;
+    font-size: 16px;
+    padding: 8px;
+  }
+  .print-settings button {
+    font-size: 14px;
+    flex: 1 1 105px;
+  }
+  .print-preview {
+    padding: 8px;
+  }
+  .worksheet {
+    padding: 16px 12px;
+    font-size: 11pt;
+  }
+  .worksheet h1 {
+    font-size: 17pt;
+  }
+  .paper-stacks {
+    gap: 10pt;
+  }
+  .paper-stack-wrap {
+    min-width: 0;
+    width: 68pt;
+  }
+  .paper-stack {
+    height: 138pt;
+  }
+  .paper-infix {
+    font-size: 11pt;
+    gap: 0 5pt;
+  }
+  .paper-code {
+    font-size: 9pt;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .print-portal {
+    animation: none;
+  }
+}
+@page {
+  size: letter;
+  margin: 0.6in;
+}
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
+  }
+  body:has(.print-portal) > :not(.print-portal) {
+    display: none !important;
+  }
+  .print-portal {
+    position: static;
+    display: block;
+    padding: 0;
+    margin: 0;
+    background: white;
+    animation: none;
+  }
+  .print-dialog,
+  .print-preview {
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: white;
+  }
+  .print-controls {
+    display: none !important;
+  }
+  .worksheet {
+    width: auto;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+    font-size: 12pt;
+    color: black;
+    background: white;
+  }
+  .worksheet * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+    color: black !important;
+    background: white !important;
+    animation: none !important;
+    transition: none !important;
+  }
+  .worksheet h1 {
+    font-size: 20pt;
+  }
+  .worksheet h2,
+  .worksheet h3 {
+    break-after: avoid;
+  }
+  .paper-code {
+    font-size: 10pt;
+    break-inside: avoid;
+  }
+  .paper-question {
+    break-inside: avoid;
+  }
+  .worksheet-questions:not(.worksheet-exam) .paper-question + .paper-question {
+    break-before: page;
+    border: 0;
+    padding-top: 0;
+    margin-top: 0;
+  }
+  .worksheet-exam .paper-question {
+    break-inside: auto;
+  }
+  .worksheet-exam .paper-question + .paper-question {
+    border: 0;
+    padding-top: 10pt;
+  }
+  .paper-stacks,
+  .paper-infix,
+  .paper-postfix-boxes,
+  .paper-given,
+  .paper-part {
+    break-inside: avoid;
+  }
+  .paper-stacks {
+    gap: 20pt;
+  }
+  .paper-stack-wrap {
+    width: 92pt;
+  }
+  .paper-stack {
+    height: 162pt;
+  }
+  .paper-infix {
+    font-size: 13pt;
+    gap: 0 7pt;
+  }
+  .paper-heading {
+    break-inside: avoid;
+    break-after: avoid;
+  }
+  .paper-question > .paper-prompt {
+    break-after: avoid;
+  }
+}
+.worksheet .paper-section {
+  margin: 24pt 0 12pt;
+  padding-bottom: 6pt;
+  border-bottom: 1pt solid black;
+  font-size: 14pt;
+  break-after: avoid;
+}
+.worksheet-exam .paper-writing {
+  margin: 4pt 0 8pt;
+}
+.worksheet-exam .paper-writing > div {
+  height: 21pt;
+}
+.worksheet-exam .paper-part h3 {
+  margin: 8pt 0 5pt;
+}
+@media print {
+  .worksheet-exam .paper-question {
+    break-inside: avoid;
+    padding-bottom: 12pt;
+  }
+  .worksheet-exam .paper-code {
+    font-size: 9.5pt;
+    line-height: 1.28;
+  }
+}
+@media print {
+  .worksheet-exam .paper-question {
+    break-inside: auto;
+  }
+  .worksheet-exam .paper-question:has(.paper-stacks) {
+    break-inside: avoid;
+  }
+  .worksheet-exam .paper-prompt {
+    orphans: 3;
+    widows: 3;
+  }
+  .worksheet-exam .paper-code,
+  .worksheet-exam .paper-given {
+    break-after: avoid;
+  }
+  .worksheet-key .paper-question {
+    break-inside: auto;
+  }
+}
+
+.paper-question-context {
+  break-inside: avoid;
+}
+.paper-compact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24pt;
+}
+.paper-part-wide {
+  grid-column: 1 / -1;
+}
+@media (max-width: 600px) {
+  .paper-compact {
+    display: block;
+  }
+}
+@media print {
+  .paper-question-context {
+    break-inside: avoid;
+    break-after: avoid;
+  }
+  .paper-compact {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .paper-part-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media print {
+  .paper-queue-parts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .worksheet:not(.worksheet-exam) .paper-heading {
+    padding-bottom: 8pt;
+    margin-bottom: 12pt;
+  }
+  .worksheet:not(.worksheet-exam) .paper-heading h1 {
+    font-size: 18pt;
+    margin-bottom: 10pt;
+  }
+  .worksheet:not(.worksheet-exam) .paper-part h3 {
+    margin: 8pt 0 5pt;
+  }
+}
+@page {
+  @bottom-right {
+    content: counter(page) " / " counter(pages);
+    font:
+      9pt "Times New Roman",
+      serif;
+    color: black;
+  }
+}

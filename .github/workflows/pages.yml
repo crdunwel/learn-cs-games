@@ -1,0 +1,98 @@
+name: Verify and publish Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify application and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CI: true
+      CC: clang
+      SCREENSHOT_DIR: ${{ github.workspace }}/artifacts/review
+      VITE_BASE_PATH: /learn-cs-games/
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/pdf-requirements.txt
+      - name: Install test dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          sudo apt-get update
+          sudo apt-get install --yes clang poppler-utils
+          python -m pip install -r tests/pdf-requirements.txt
+          mkdir -p "$SCREENSHOT_DIR"
+      - name: Check context routes and documentation links
+        run: npm run docs:check
+      - name: Check generators, grading, state, and practice C
+        run: npm test
+      - name: Compile and check exam C
+        run: npm run test:exam-c
+      - name: Check browser interactions and mobile layouts
+        # The interaction suite uses root URLs; only the build smoke uses the Pages base.
+        run: VITE_BASE_PATH=./ npm run test:browser
+      - name: Check exported PDF grid continuity
+        run: >-
+          python tests/check-pdf-grids.py
+          --output-dir "$SCREENSHOT_DIR/grid-check"
+          "$SCREENSHOT_DIR/postfix-practice.pdf"
+          "$SCREENSHOT_DIR/the-exam.pdf"
+      - name: Build and test the deployed subdirectory
+        run: npm run test:release
+      - name: Retain test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verification-evidence
+          path: |
+            artifacts/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Package the verified site
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: dist
+
+  deploy:
+    name: Publish GitHub Pages
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+      - name: Deploy the verified build
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

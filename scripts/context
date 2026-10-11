@@ -1,0 +1,3 @@
+#!/bin/sh
+# Run from any directory; context.mjs resolves paths relative to this repository.
+exec node "$(dirname "$0")/context.mjs" "$@"
