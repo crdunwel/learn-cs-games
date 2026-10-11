@@ -23,7 +23,14 @@ export function generateMemory(rng, level = 1) {
   const kind = pick(
     rng,
     level === 1
-      ? ["calloc", "bytes", "string", "array-length", "zero-read"]
+      ? [
+          "calloc",
+          "bytes",
+          "string",
+          "array-length",
+          "zero-read",
+          "malloc-write",
+        ]
       : [
           "calloc",
           "bytes",
@@ -37,12 +44,63 @@ export function generateMemory(rng, level = 1) {
           "pointer-offset",
           "shrink",
           "row-allocations",
+          "malloc-write",
         ],
   );
   const count = integer(rng, 12, 240);
   let code, visual, step;
   const meta = { kind, count };
-  if (kind === "calloc") {
+  if (kind === "malloc-write") {
+    const variant = integer(rng, 0, 5);
+    const definitions = [
+      { type: "int", name: "scores", elementBytes: 4, count },
+      { type: "double", name: "measurements", elementBytes: 8, count },
+      { type: "float", name: "samples", elementBytes: 4, count },
+      { type: "char", name: "copy", elementBytes: 1, count: 0 },
+      { type: "Book", name: "book", elementBytes: 44, count: 1 },
+      { type: "Book", name: "books", elementBytes: 44, count },
+    ];
+    const allocation = definitions[variant];
+    if (variant === 3) {
+      meta.length = integer(rng, 2, 96);
+      allocation.count = meta.length + 1;
+    }
+    meta.variant = variant;
+    const structure =
+      allocation.type === "Book"
+        ? "typedef struct Book { char title[40]; int pages; } Book;\n"
+        : "";
+    code = `${structure}// Assume sizeof(${allocation.type}) = ${allocation.elementBytes} bytes.\n// ${allocation.name} is a ${allocation.type} pointer; declare it or assume it exists.\n// Write one malloc assignment. No initialization is required.`;
+    const request =
+      variant === 3
+        ? `Allocate space for a ${meta.length}-character C string in copy.`
+        : variant === 4
+          ? "Allocate one Book in book."
+          : `Allocate ${count} ${allocation.type} elements in ${allocation.name}.`;
+    visual = flow("What to allocate", [
+      variant === 3
+        ? `${meta.length} characters + '\\0'`
+        : `${allocation.count} ${allocation.type} elements`,
+      `${allocation.elementBytes} bytes each`,
+    ]);
+    const bytes = allocation.count * allocation.elementBytes;
+    step = {
+      kind: "input",
+      format: "malloc",
+      allocation,
+      prompt: request,
+      answer: `${allocation.type} *${allocation.name} = malloc(${allocation.count} * sizeof *${allocation.name});`,
+      hint: "Store malloc's returned address in the named pointer. Its size is element count × size of one element. C strings need one extra char for \\0.",
+      explanation:
+        variant === 3
+          ? `Include the final '\\0': ${meta.length} + 1 = ${allocation.count} chars. Each char takes one byte. Store the returned address in copy.`
+          : `${allocation.count} ${allocation.type} ${allocation.count === 1 ? "element needs" : "elements need"} ${allocation.count} × ${allocation.elementBytes} = ${bytes} bytes. sizeof *${allocation.name} measures one element; malloc returns the address to store in ${allocation.name}.`,
+      illustration: [
+        `${allocation.count} × ${allocation.elementBytes} = ${bytes} bytes`,
+        `Store address → ${allocation.name}`,
+      ],
+    };
+  } else if (kind === "calloc") {
     const answer = `int *scores = calloc(${count}, sizeof *scores);`;
     code = `// Allocate ${count} ints, each initially 0.\n// Use the pointed-to type for the element size.\n// Assume the allocation succeeds.`;
     visual = flow("Array to create", [`${count} ints`, "All initially 0"]);
@@ -290,7 +348,43 @@ export function generateMemory(rng, level = 1) {
   }
   if (["calloc", "realloc"].includes(kind)) step.optionFormat = "code";
   if (kind === "free-order") step.optionFormat = "sequence";
-  return { type: "trace", code, visual, meta, steps: [step] };
+  const reviewSteps =
+    kind === "malloc-write"
+      ? [
+          {
+            title: "Count the elements",
+            detail:
+              meta.variant === 3
+                ? "A string also needs its terminating null character."
+                : "Allocate every requested element.",
+            math:
+              meta.variant === 3
+                ? `${meta.length} + 1 = ${step.allocation.count}`
+                : `Count = ${step.allocation.count}`,
+          },
+          {
+            title: "Calculate the bytes",
+            detail: "Multiply the count by the size of one element.",
+            math: `${step.allocation.count} × ${step.allocation.elementBytes} = ${step.allocation.count * step.allocation.elementBytes} bytes`,
+          },
+          {
+            title: "Store the address",
+            detail: `malloc returns the address. Assign it to ${step.allocation.name}.`,
+            math: step.answer,
+          },
+        ]
+      : [
+          { title: "Start with the rule", detail: step.hint },
+          ...(step.illustration || []).map((math, i) => ({
+            title: `Step ${i + 1}`,
+            detail:
+              i === 0
+                ? step.explanation
+                : "Follow the allocation or pointer shown here.",
+            math,
+          })),
+        ];
+  return { type: "trace", code, visual, meta, steps: [step], reviewSteps };
 }
 const lessonStep = (caption, code, items, result) => ({
   type: "trace",
@@ -300,6 +394,31 @@ const lessonStep = (caption, code, items, result) => ({
   visual: flow("Memory map", items),
 });
 export const memoryLessons = [
+  {
+    id: "write-malloc",
+    title: "Write a malloc line",
+    summary: "Count × element size → pointer.",
+    steps: [
+      lessonStep(
+        "Start with the pointer's type and the number of elements.",
+        "int *scores; // space for 5 ints",
+        ["5 elements", "int *scores"],
+        "The pointer will hold the returned address",
+      ),
+      lessonStep(
+        "Multiply the count by the size of one int. sizeof *scores measures an element.",
+        "int *scores = malloc(5 * sizeof *scores);",
+        ["5", "× sizeof one int"],
+        "sizeof(int) works too; spaces do not change meaning",
+      ),
+      lessonStep(
+        "For a string, add one char for the final null character.",
+        "char *name = malloc(3 + 1);",
+        ["3 letters", "1 null character"],
+        "End a C statement with ;",
+      ),
+    ],
+  },
   {
     id: "allocate-exactly",
     title: "Count bytes, then allocate",

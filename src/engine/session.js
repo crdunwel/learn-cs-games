@@ -1,3 +1,4 @@
+import { gradeMallocAnswer } from "./mallocAnswer.js";
 import { emptyBaseWork, checkBaseWork } from "./baseWork.js";
 import { equalAnswer, compactAnswer } from "./answerFormats.js";
 
@@ -22,6 +23,7 @@ export const normalizePostfix = compactAnswer;
 export function evaluate(step, draft) {
   if (step.work && draft && typeof draft === "object")
     return checkBaseWork(step.work, draft).correct;
+  if (step.format === "malloc") return gradeMallocAnswer(step, draft).correct;
   return equalAnswer(step, draft);
 }
 // Only answering -> checked awards points. Repeated checks/reveals cannot award again.
@@ -34,6 +36,11 @@ export function sessionReducer(state, action) {
     ["check", "reveal"].includes(action.type) &&
     state.status === "answering"
   ) {
+    const allocation =
+      state.question.steps[state.step].format === "malloc" &&
+      action.type === "check"
+        ? gradeMallocAnswer(state.question.steps[state.step], state.draft)
+        : null;
     const correct =
       action.type === "check" &&
       evaluate(state.question.steps[state.step], state.draft);
@@ -45,7 +52,8 @@ export function sessionReducer(state, action) {
           ? "revealed"
           : "incorrect",
       allCorrect: state.allCorrect && correct,
-      earned: state.earned + (correct ? 10 : 0),
+      earned: state.earned + (correct ? (allocation?.earned ?? 10) : 0),
+      warning: allocation?.correct ? allocation.warning : undefined,
     };
   }
   if (
@@ -58,6 +66,7 @@ export function sessionReducer(state, action) {
       ...state,
       step,
       status: "answering",
+      warning: undefined,
       draft: state.question.steps[step].kind === "stack" ? [] : "",
     };
   }

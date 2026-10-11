@@ -21,14 +21,39 @@ export function recursionCase(topic, d = {}) {
     "power",
     "recurrence",
     "recursive-step",
+    "fibonacci",
+    "fibonacci-calls",
+    "permutations",
+    "recursive-search",
   ];
-  const head = draw(topics.indexOf(topic), 0, 7);
+  const head = draw(topics.indexOf(topic), 0, topics.length - 1);
   let rest;
   if (topic === "sum")
     rest = [draw(d.n, 0, 18), draw(d.decrement, 1, 4), draw(d.base, 0, 4)];
   if (topic === "power") rest = [draw(d.a, 2, 9), draw(d.b, 0, 4)];
   if (topic === "print") rest = [draw(d.n, 2, 8), d.before ? 0 : 0.9];
   if (topic === "recurrence") rest = [draw(d.n, 0, 7)];
+  if (["fibonacci", "fibonacci-calls"].includes(topic))
+    rest = [draw(d.n, 0, 10)];
+  if (topic === "permutations") rest = [draw(d.size, 2, 5)];
+  if (topic === "recursive-search") {
+    const values =
+      d.values ?? Array.from({ length: d.size }, (_, i) => d.start + i * d.gap);
+    const start = values[0],
+      gap = values[1] - start,
+      index = values.indexOf(d.key);
+    rest = [
+      draw(values.length, 5, 10),
+      draw(start, 1, 20),
+      draw(gap, 2, 8),
+      index >= 0 ? 0 : 0.9,
+      draw(
+        index >= 0 ? index : d.key < start ? 0 : 1,
+        0,
+        index >= 0 ? values.length - 1 : 1,
+      ),
+    ];
+  }
   if (["base-case", "recursive-step"].includes(topic))
     rest = [draw(d.decrement, 1, 5), draw(d.n, 3, 20)];
   if (["array-sum", "evens"].includes(topic)) {
@@ -57,7 +82,7 @@ export function bigOCase(kind, parameter = 3) {
   return generateBigO(
     tape(
       0.9,
-      draw(kinds.indexOf(kind), 0, 6),
+      draw(kinds.indexOf(kind), 0, 12),
       draw(kind === "linear" ? parameter : 2, 2, 5),
       draw(kind === "constant" ? parameter : 3, 3, 20),
     ),
@@ -108,6 +133,7 @@ export function memoryCase(kind, data = {}) {
     "pointer-offset",
     "shrink",
     "row-allocations",
+    "malloc-write",
   ];
   const rest = [
     draw(kinds.indexOf(kind), 0, kinds.length - 1),
@@ -154,6 +180,10 @@ export function memoryCase(kind, data = {}) {
     );
   if (kind === "row-allocations")
     rest.push(draw(data.rows, 1, 8), draw(data.columns, 2, 10));
+  if (kind === "malloc-write") {
+    rest.push(draw(data.variant ?? 0, 0, 5));
+    if (data.variant === 3) rest.push(draw(data.length ?? 2, 2, 96));
+  }
   return generateMemory(tape(...rest), 3);
 }
 export function searchCase(n, start, gap, target, kind = "result", round = 0) {
@@ -179,7 +209,21 @@ export function searchCase(n, start, gap, target, kind = "result", round = 0) {
     );
   }
   rest.push(
-    draw(["mid", "bounds", "result", "comparisons"].indexOf(kind), 0, 3),
+    draw(
+      [
+        "mid",
+        "bounds",
+        "result",
+        "comparisons",
+        "probe-value",
+        "direction",
+        "next-mid",
+        "remaining",
+        "worst-checks",
+      ].indexOf(kind),
+      0,
+      8,
+    ),
     round,
   );
   return generateSearch(tape(...rest), 3);

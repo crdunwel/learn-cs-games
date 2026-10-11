@@ -1,3 +1,4 @@
+import { validateBigOQuestion } from "../src/engine/bigOValidation.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded } from "../src/engine/random.js";
@@ -9,7 +10,7 @@ import {
 import {
   emptyQueue,
   queueMove,
-  generateQueue,
+  generateCircularQueue as generateQueue,
   queueLabExample,
 } from "../src/games/queue.js";
 import { generateBigO } from "../src/games/bigO.js";
@@ -209,43 +210,24 @@ test("1,500 generated queues match a separate FIFO-list oracle", () => {
   assert(events.has("Full") && events.has("Empty"));
   assert.equal(targets.size, 4);
 });
-test("Big-O snippets agree with measured iteration growth; scale answers follow exact models", () => {
+test("1500 Big-O questions obey independent source contracts and exact scaling models", () => {
   const seen = new Set();
-  function countWork(code, n) {
-    const js = code
-      .replaceAll("int ", "let ")
-      .replace("i /= 2", "i = Math.floor(i / 2)")
-      .replace("j /= 2", "j = Math.floor(j / 2)");
-    return Function(
-      "n",
-      `let count=0; const work=()=>count++; ${js}; return count;`,
-    )(n);
-  }
   for (let level = 1; level <= 3; level++)
     for (let seed = 0; seed < 500; seed++) {
-      const q = generateBigO(seeded(seed), level),
-        step = q.steps[0];
-      assert(step.options.includes(step.answer));
+      const q = generateBigO(seeded(seed), level);
+      validateBigOQuestion(q);
+      seen.add(q.scale ? `scale-${q.scale.mode}` : q.kind);
       if (q.scale) {
-        assert.equal(step.answer, `${q.scale.factor ** q.scale.power}×`);
-        seen.add("scale");
-        continue;
+        const ratio = q.scale.factor ** q.scale.power;
+        assert.equal(
+          q.steps[0].answer,
+          q.scale.mode === "time"
+            ? `${q.scale.timeMs * ratio} ms`
+            : `${ratio}×`,
+        );
       }
-      seen.add(q.kind);
-      const ratio = countWork(q.code, 512) / countWork(q.code, 256);
-      const expected = {
-        "O(1)": 1,
-        "O(log n)": 9 / 8,
-        "O(n)": 2,
-        "O(n log n)": (2 * 9) / 8,
-        "O(n²)": 4,
-      }[step.answer];
-      assert(
-        Math.abs(ratio - expected) < 0.04,
-        `${q.kind}: ${ratio} vs ${expected}`,
-      );
     }
-  assert.equal(seen.size, 8);
+  assert.equal(seen.size, 15);
 });
 
 // Values and indices transcribed from Lab 6 Q3; this is deliberately not derived from queueMove.

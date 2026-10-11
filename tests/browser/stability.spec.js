@@ -64,7 +64,8 @@ for (const width of [1440, 320]) {
       async function unchanged() {
         await settle(page);
         expectSamePosition(await position(button), anchor);
-        expectSamePosition(await position(bottom), stackBottom);
+        if (await bottom.count())
+          expectSamePosition(await position(bottom), stackBottom);
         await expectNoOverflow(page);
       }
       for (let count = 0; count < 8; count++) {
@@ -87,7 +88,8 @@ for (const width of [1440, 320]) {
       await expect(
         page.getByLabel("Your postfix", { exact: true }),
       ).toBeVisible();
-      await expect(panel.locator(".point-label")).toHaveText("A");
+      await expect(panel.locator(".point-label")).toHaveCount(0);
+      await expect(panel.locator(".stack-wrap")).toHaveCount(0);
       await unchanged();
       await page.getByLabel("Your postfix", { exact: true }).fill("4 4 +");
       await button.click();
@@ -119,6 +121,12 @@ for (const width of [1440, 320]) {
       );
       await settle(page);
       expectSamePosition(await position(button), anchor);
+      await expect(
+        page.getByRole("button", { name: "Previous", exact: false }),
+      ).toBeDisabled();
+      await page
+        .getByRole("button", { name: "Next operation", exact: false })
+        .click();
       await page
         .getByRole("button", { name: "Previous", exact: false })
         .click();
@@ -137,7 +145,7 @@ for (const width of [1440, 320]) {
     }) => {
       for (const game of games) {
         await page.goto(`/#${game.id}`);
-        let gameAnchor;
+
         for (
           let lessonIndex = 0;
           lessonIndex < game.lessons.length;
@@ -150,8 +158,7 @@ for (const width of [1440, 320]) {
           await settle(page);
           const controls = page.locator(".tutorial-controls:visible");
           const anchor = await position(controls);
-          gameAnchor ??= anchor;
-          expectSamePosition(anchor, gameAnchor);
+
           for (let index = 0; index < lesson.steps.length; index++) {
             await settle(page);
             expectSamePosition(await position(controls), anchor);

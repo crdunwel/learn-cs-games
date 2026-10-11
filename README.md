@@ -20,16 +20,16 @@ Open the URL Vite prints, normally `http://127.0.0.1:5173/`. [index.html](index.
 | Game              | Practice                                             |
 | ----------------- | ---------------------------------------------------- |
 | Stack & Slay      | Vertical operator stacks and infix-to-postfix        |
-| Poolside Queue    | FIFO operations, circular arrays, front/rear indices |
-| Big-O Afterglow   | C loops and exact growth scaling                     |
-| Recursion Reverie | Calls, returns, print order, array recursion         |
+| Poolside Queue    | Ordinary FIFO and circular arrays, operation replays |
+| Big-O Afterglow   | C loops, binary search, cubic growth, timed scaling  |
+| Recursion Reverie | Calls, Fibonacci, permutations, recursive search     |
 | Link & Bloom      | Linked-list insertion, pointer order, cleanup        |
 | Golden Search     | Binary-search indices, bounds, results               |
-| Memory Garden     | Allocation sizes, realloc, ownership                 |
+| Memory Garden     | Write malloc lines, allocation sizes, ownership      |
 | Basecamp          | Binary, octal, decimal, hexadecimal                  |
 | THE EXAM          | 16 questions, 120 minutes, 100 points                |
 
-Topic games have Learn walkthroughs, three selectable levels, quick feedback, hints, and XP. Print / PDF produces fresh monochrome question sheets and a separate answer key. THE EXAM prints the same paper as the current attempt. Written C and reasoning are self-marked against rubrics; objective answers are marked automatically.
+Topic games have Learn walkthroughs, three selectable levels, quick feedback, hints, and XP. Print / PDF produces fresh monochrome question sheets and a separate answer key. THE EXAM prints the same paper as the current attempt. Free-form exam C and reasoning are self-marked against rubrics; short malloc practice uses a bounded automatic grader. Other objective answers are marked automatically.
 
 Progress is saved in this browser's localStorage. Practice statistics and exam attempts use separate keys. The exam timer continues while away; reload does not grant extra time. Storage-denied mode is temporary and visibly reported. See [state and persistence](docs/state.md).
 

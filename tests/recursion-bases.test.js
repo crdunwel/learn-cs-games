@@ -47,6 +47,20 @@ function recursionOracle(question) {
       values.push(2 * values[n - 1] + values[n - 2] - 1);
     return String(values[data.n]);
   }
+  if (["fibonacci", "fibonacci-calls"].includes(topic)) {
+    const calls = topic === "fibonacci-calls";
+    const values = calls ? [1, 1] : [0, 1];
+    for (let n = 2; n <= data.n; n++)
+      values.push((calls ? 1 : 0) + values[n - 1] + values[n - 2]);
+    return String(values[data.n]);
+  }
+  if (topic === "permutations") {
+    let count = 1;
+    for (let position = 2; position <= data.size; position++) count *= position;
+    return String(count);
+  }
+  if (topic === "recursive-search")
+    return String(data.values.indexOf(data.key));
   if (topic === "base-case") return "n <= 0";
   return `n - ${data.decrement}`;
 }
@@ -113,7 +127,7 @@ test("3,600 generated recursion rounds match independent iterative oracles", () 
       `level ${level}: only ${variants.size} variants`,
     );
   }
-  assert.equal(seenTopics.size, 8);
+  assert.equal(seenTopics.size, 12);
   assert.deepEqual([...edges].sort(), [
     "empty-evens",
     "empty-sum",

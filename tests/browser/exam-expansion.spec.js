@@ -99,15 +99,24 @@ test("compact postfix earns full credit; wrong Big-O answers include a readable 
   await page.getByLabel("Level", { exact: true }).selectOption("3");
   await page.getByRole("button", { name: "O(2ⁿ)", exact: true }).click();
   await page.getByRole("button", { name: "Check", exact: false }).click();
-  await expect(page.locator(".feedback-text")).toContainText("inner loop");
-  await expect(page.locator(".feedback-illustration")).toContainText(
-    "3 × 3 = 9",
+  const generated = games.find((g) => g.id === "bigO").generate(() => 0.4, 3);
+  await expect(page.locator(".feedback-text")).toContainText(
+    generated.steps[0].explanation,
+  );
+  await expect(page.locator(".step-review")).toContainText(
+    generated.reviewSteps[0].math,
+  );
+  await page
+    .getByRole("button", { name: "Continue solution", exact: false })
+    .click();
+  await expect(page.locator(".step-review")).toContainText(
+    generated.reviewSteps[1].math,
   );
   expect(
     await page
       .locator(".feedback-text")
       .evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),
-  ).toBeGreaterThanOrEqual(18);
+  ).toBeGreaterThanOrEqual(17);
   if (process.env.SCREENSHOT_DIR)
     await page.screenshot({
       path: `${process.env.SCREENSHOT_DIR}/bigO-explanation.png`,

@@ -93,13 +93,11 @@ test("queue index answers use slots; wrong feedback and replay explain the move 
   await page.getByRole("button", { name: "Check", exact: false }).click();
   await expect(page.locator(".feedback-copy")).toContainText("Not quite");
   await expect(page.locator(".feedback-copy")).toContainText(/rear|insertion/i);
-  await expect(page.locator(".diagram-label")).toHaveText(
-    "AFTER THE OPERATIONS",
-  );
-  await expect(page.locator(".replay-status")).not.toHaveText(
-    "Start here. Watch the pointers.",
-  );
-  await page.getByRole("button", { name: "Previous", exact: false }).click();
+  await expect(page.locator(".diagram-label")).toHaveText("STARTING QUEUE");
+  await expect(page.locator(".replay-status")).toContainText("Start here");
+  await expect(
+    page.getByRole("button", { name: "Previous", exact: false }),
+  ).toBeDisabled();
   await expect(page.locator(".diagram-label")).toHaveText("STARTING QUEUE");
   await page
     .getByRole("button", { name: "Next operation", exact: false })
@@ -170,8 +168,6 @@ test("reduced motion shows queue outcome immediately", async ({ page }) => {
   await page.goto("/#queue");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("button", { name: "Reveal", exact: true }).click();
-  await expect(page.locator(".diagram-label")).toHaveText(
-    "AFTER THE OPERATIONS",
-  );
+  await expect(page.locator(".diagram-label")).toHaveText("STARTING QUEUE");
   await expect(page.locator(".xp-pill")).toContainText("0 XP");
 });

@@ -25,14 +25,17 @@ export function baseWork(source, from, answer, to) {
 }
 export function emptyBaseWork(work) {
   return {
-    products: work.source.map(() => ""),
-    total: "",
+    products: work.from === 10 ? [] : work.source.map(() => ""),
+    total:
+      work.from === 10
+        ? String(work.source.reduce((n, r) => n + r.product, 0))
+        : "",
     digits: work.to === 10 ? [] : work.target.map(() => ""),
   };
 }
 export function solvedBaseWork(work) {
   return {
-    products: work.source.map((r) => String(r.product)),
+    products: work.from === 10 ? [] : work.source.map((r) => String(r.product)),
     total: String(work.source.reduce((n, r) => n + r.product, 0)),
     digits: work.to === 10 ? [] : work.target.map((r) => r.digit),
   };
@@ -51,7 +54,7 @@ export function placeDigit(text, base) {
   return value !== null && value >= 0 && value < base ? value : null;
 }
 export function baseWorkResult(work, draft) {
-  if (work.to === 10) return String(draft?.total ?? "");
+  if (work.to === 10) return String(wholeNumber(draft?.total) ?? "□");
   return work.target
     .map((_, i) => {
       const digit = placeDigit(draft?.digits?.[i], work.to);
@@ -61,7 +64,7 @@ export function baseWorkResult(work, draft) {
 }
 export function checkBaseWork(work, draft) {
   const expected = solvedBaseWork(work);
-  const products = work.source.map((r, i) =>
+  const products = (work.from === 10 ? [] : work.source).map((r, i) =>
     equalAnswer(
       { kind: "number", answer: String(r.product) },
       draft?.products?.[i],

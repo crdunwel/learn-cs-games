@@ -60,7 +60,11 @@ export const routes = [
       "work()",
     ],
     ["docs/games/bigO.md"],
-    ["src/games/bigO.js", "src/engine/growthNotation.js"],
+    [
+      "src/games/bigO.js",
+      "src/engine/bigOValidation.js",
+      "src/engine/growthNotation.js",
+    ],
     ["tests/generators.test.js", "tests/answer-formats.test.js"],
   ),
   route(
@@ -68,7 +72,7 @@ export const routes = [
     "Recursion",
     ["recurs", "base case", "unwind", "factorial", "permutation", "hanoi"],
     ["docs/games/recursion.md"],
-    ["src/games/recursion.js"],
+    ["src/games/recursion.js", "src/engine/recursionValidation.js"],
     ["tests/recursion-bases.test.js", "tests/practice-native-c.test.js"],
   ),
   route(
@@ -88,7 +92,7 @@ export const routes = [
     "Binary search",
     ["binary search", "golden search", "midpoint", "mid index", "search bound"],
     ["docs/games/search.md"],
-    ["src/games/search.js"],
+    ["src/games/search.js", "src/engine/searchValidation.js"],
     ["tests/exam-games.test.js", "tests/practice-validation.test.js"],
   ),
   route(
@@ -96,7 +100,11 @@ export const routes = [
     "C memory and ownership",
     ["memory", "alloc", "ownership", "cleanup", "sizeof", "bytes", "free("],
     ["docs/games/memory.md"],
-    ["src/games/memory.js"],
+    [
+      "src/games/memory.js",
+      "src/engine/mallocAnswer.js",
+      "src/engine/mallocValidation.js",
+    ],
     [
       "tests/exam-games.test.js",
       "tests/practice-native-c.test.js",
@@ -216,6 +224,8 @@ export const routes = [
     [
       "src/components/Tutorial.jsx",
       "src/components/Tooltip.jsx",
+      "src/components/StepReview.jsx",
+      "src/engine/learningSteps.js",
       "src/styles.css",
     ],
     [

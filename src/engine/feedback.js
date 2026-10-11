@@ -172,8 +172,12 @@ export function explainMistake(question, stepIndex, draft) {
     return step.kind === "stack"
       ? stackMistake(question, draft)
       : postfixMistake(question, draft);
-  if (question.type === "queue") return queueMistake(question, draft);
+  if (question.type === "queue")
+    return question.variant === "fifo"
+      ? step.explanation
+      : queueMistake(question, draft);
   if (question.scale) {
+    if (question.scale.initialSize !== undefined) return step.explanation;
     const { power, factor } = question.scale;
     return power === 0
       ? "W(n) = 1 stays fixed as n grows, so the work stays the same."

@@ -104,6 +104,36 @@ test("binary-search questions agree with an independent full search", () => {
       assert.equal(q.steps[0].answer, String(expected.visits.length));
     if (m.kind === "mid")
       assert.equal(q.steps[0].answer, String(Math.floor((m.low + m.high) / 2)));
+    if (m.kind === "probe-value")
+      assert.equal(
+        q.steps[0].answer,
+        String(m.array[Math.floor((m.low + m.high) / 2)]),
+      );
+    if (["direction", "next-mid", "remaining"].includes(m.kind)) {
+      const mid = Math.floor((m.low + m.high) / 2),
+        left = m.target < m.array[mid];
+      const low = left ? m.low : mid + 1,
+        high = left ? mid - 1 : m.high;
+      assert.equal(
+        q.steps[0].answer,
+        m.kind === "direction"
+          ? left
+            ? "Left half"
+            : "Right half"
+          : String(
+              m.kind === "remaining"
+                ? Math.max(0, high - low + 1)
+                : low > high
+                  ? -1
+                  : Math.floor((low + high) / 2),
+            ),
+      );
+    }
+    if (m.kind === "worst-checks")
+      assert.equal(
+        Number(q.steps[0].answer),
+        Math.floor(Math.log2(m.array.length)) + 1,
+      );
     if (m.kind === "bounds") {
       const mid = Math.floor((m.low + m.high) / 2);
       assert.notEqual(m.target, m.array[mid]);
@@ -116,8 +146,13 @@ test("binary-search questions agree with an independent full search", () => {
   assert.deepEqual([...seen].sort(), [
     "bounds",
     "comparisons",
+    "direction",
     "mid",
+    "next-mid",
+    "probe-value",
+    "remaining",
     "result",
+    "worst-checks",
   ]);
 });
 
@@ -170,6 +205,7 @@ test("dynamic-memory answers respect byte counts, preservation, and ownership", 
     "bytes",
     "calloc",
     "free-order",
+    "malloc-write",
     "pointer-offset",
     "realloc",
     "resize",

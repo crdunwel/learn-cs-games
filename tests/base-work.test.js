@@ -93,3 +93,15 @@ test("guided round locks on check, awards once, reveals no points and resets all
   assert.equal(wrong.status, "incorrect");
   assert.equal(wrong.earned, 0);
 });
+
+test("decimal sources skip redundant decimal products and begin at destination places", () => {
+  const q = baseCase(10, 2, 17),
+    w = q.steps[0].work,
+    d = emptyBaseWork(w);
+  assert.deepEqual(d.products, []);
+  assert.equal(d.total, "17");
+  assert.deepEqual(d.digits, ["", "", "", "", ""]);
+  d.digits = ["1", "0", "0", "0", "1"];
+  assert.equal(checkBaseWork(w, d).correct, true);
+  assert.equal(baseWorkResult(w, d), "10001");
+});

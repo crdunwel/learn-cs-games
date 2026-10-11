@@ -33,10 +33,11 @@ export default function BaseWork({ step, draft, onChange, status }) {
     });
   }
   const total = wholeNumber(shown.total);
+  const guideBase = work.from === 10 ? work.to : work.from;
   let remainder = total;
   return (
     <div
-      className="base-work"
+      className={`base-work ${work.from === 10 ? "base-direct" : ""}`}
       onKeyDown={(event) => {
         if (event.key !== "Enter" || event.target.tagName !== "INPUT") return;
         const fields = [
@@ -52,106 +53,110 @@ export default function BaseWork({ step, draft, onChange, status }) {
       <p className="place-rule">
         The rightmost place is{" "}
         <b>
-          {work.from}
+          {guideBase}
           <sup>0</sup> = 1
         </b>
         . Move left: the exponent goes up by 1 and the place value multiplies by{" "}
-        {work.from}.
+        {guideBase}.
       </p>
       <p className="power-example">
         <b>
-          {work.from}
+          {guideBase}
           <sup>3</sup>
         </b>{" "}
         means{" "}
         <b>
-          {work.from} × {work.from} × {work.from} = {work.from ** 3}
+          {guideBase} × {guideBase} × {guideBase} = {guideBase ** 3}
         </b>
         . The small number counts repeated factors.
       </p>
       <div className="base-work-panels">
-        <section className="place-section" aria-label="Read source places">
-          <h3>1. Multiply each digit</h3>
-          <p>
-            Fill the decimal product. A zero digit still holds its place.
-            {work.from === 16 ? " A–F mean 10–15." : ""}
-          </p>
-          <div className="place-column-labels">
-            <span>Digit</span>
-            <span>Place value</span>
-            <span>Product</span>
-          </div>
-          {work.source.map((row, i) => (
-            <div className="place-row" key={row.exponent}>
-              <div className="place-equation">
-                <span className="place-digit">
-                  {row.digit}
-                  {row.value >= 10 && <small>= {row.value}</small>}
-                </span>
-                <span>×</span>
-                <Power base={work.from} row={row} />
-                <span>=</span>
-                <input
-                  form="practice-answer"
-                  aria-label={`Product at ${work.from}^${row.exponent}`}
-                  aria-describedby={`product-help-${i}`}
-                  aria-invalid={checked && !result.products[i]}
-                  autoComplete="off"
-                  spellCheck="false"
-                  value={shown.products[i]}
-                  disabled={checked}
-                  placeholder="□"
-                  onChange={(e) => update("products", i, e.target.value)}
-                />
-              </div>
-              <p
-                id={`product-help-${i}`}
-                className={`place-feedback ${checked && !result.products[i] ? "place-wrong" : ""}`}
-              >
-                {checked
-                  ? result.products[i]
-                    ? "✓"
-                    : `${row.value} × ${row.weight} = ${row.product}`
-                  : row.exponent === 0
-                    ? "Start counting positions at 0 here."
-                    : "\u00a0"}
-              </p>
+        {work.from !== 10 && (
+          <section className="place-section" aria-label="Read source places">
+            <h3>1. Multiply each digit</h3>
+            <p>
+              Fill the decimal product. A zero digit still holds its place.
+              {work.from === 16 ? " A–F mean 10–15." : ""}
+            </p>
+            <div className="place-column-labels">
+              <span>Digit</span>
+              <span>Place value</span>
+              <span>Product</span>
             </div>
-          ))}
-          <h3>2. Add the products</h3>
-          <div className="place-sum" aria-label="Products to add">
             {work.source.map((row, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <span> + </span>}
-                <b>{shown.products[i].trim() || "□"}</b>
-              </React.Fragment>
+              <div className="place-row" key={row.exponent}>
+                <div className="place-equation">
+                  <span className="place-digit">
+                    {row.digit}
+                    {row.value >= 10 && <small>= {row.value}</small>}
+                  </span>
+                  <span>×</span>
+                  <Power base={guideBase} row={row} />
+                  <span>=</span>
+                  <input
+                    form="practice-answer"
+                    aria-label={`Product at ${guideBase}^${row.exponent}`}
+                    aria-describedby={`product-help-${i}`}
+                    aria-invalid={checked && !result.products[i]}
+                    autoComplete="off"
+                    spellCheck="false"
+                    value={shown.products[i]}
+                    disabled={checked}
+                    placeholder="□"
+                    onChange={(e) => update("products", i, e.target.value)}
+                  />
+                </div>
+                <p
+                  id={`product-help-${i}`}
+                  className={`place-feedback ${checked && !result.products[i] ? "place-wrong" : ""}`}
+                >
+                  {checked
+                    ? result.products[i]
+                      ? "✓"
+                      : `${row.value} × ${row.weight} = ${row.product}`
+                    : row.exponent === 0
+                      ? "Start counting positions at 0 here."
+                      : "\u00a0"}
+                </p>
+              </div>
             ))}
-          </div>
-          <label className="place-total">
-            Decimal total
-            <input
-              form="practice-answer"
-              aria-label="Decimal total"
-              aria-describedby="total-help"
-              aria-invalid={checked && !result.total}
-              autoComplete="off"
-              value={shown.total}
-              disabled={checked}
-              placeholder="□"
-              onChange={(e) => update("total", null, e.target.value)}
-            />
-          </label>
-          <p id="total-help" className="place-feedback">
-            {checked
-              ? result.total
-                ? "✓ Same value, written in decimal."
-                : `Add all the products: ${solvedBaseWork(work).total}.`
-              : "Numbers or arithmetic (like 32 + 16 + 2 + 1) are fine."}
-          </p>
-        </section>
+            <h3>2. Add the products</h3>
+            <div className="place-sum" aria-label="Products to add">
+              {work.source.map((row, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span> + </span>}
+                  <b>{shown.products[i].trim() || "□"}</b>
+                </React.Fragment>
+              ))}
+            </div>
+            <label className="place-total">
+              Decimal total
+              <input
+                form="practice-answer"
+                aria-label="Decimal total"
+                aria-describedby="total-help"
+                aria-invalid={checked && !result.total}
+                autoComplete="off"
+                value={shown.total}
+                disabled={checked}
+                placeholder="□"
+                onChange={(e) => update("total", null, e.target.value)}
+              />
+            </label>
+            <p id="total-help" className="place-feedback">
+              {checked
+                ? result.total
+                  ? "✓ Same value, written in decimal."
+                  : `Add all the products: ${solvedBaseWork(work).total}.`
+                : "Numbers or arithmetic (like 32 + 16 + 2 + 1) are fine."}
+            </p>
+          </section>
+        )}
         {work.to !== 10 && (
           <section className="place-section" aria-label="Build target places">
-            <h3>3. Fill the base-{work.to} digits</h3>
+            <h3>
+              {work.from === 10 ? "1" : "3"}. Fill the base-{work.to} digits
+            </h3>
             <p>
               Start at the largest place. How many times does it fit in what
               remains? Subtract its product, then move down.

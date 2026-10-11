@@ -1,3 +1,4 @@
+import { gradeMallocAnswer } from "./mallocAnswer.js";
 // Shared, bounded parsers for practice and exam answers. Never execute user code.
 import { growthSignature } from "./growthNotation.js";
 
@@ -226,6 +227,7 @@ export function equalPostfix(value, answer) {
 }
 
 export function equalAnswer(part, value) {
+  if (part.format === "malloc") return gradeMallocAnswer(part, value).correct;
   const draft = Array.isArray(value) ? value.join(" ") : String(value ?? "");
   if (part.kind === "stack") {
     // Practice's empty array is an intentional empty-stack answer; exam blanks aren't.

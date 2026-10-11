@@ -91,6 +91,30 @@ export function paperQuestion(gameId, source, rng) {
       ],
     };
   }
+  if (gameId === "queue" && source.variant === "fifo") {
+    return {
+      title: "Ordinary FIFO queue",
+      prompt: `Starting order (front → rear): ${source.initial.items.join(", ") || "empty"}. Apply ${source.operations.map((op) => (op.kind === "enqueue" ? `ENQUEUE(${op.value})` : "DEQUEUE()")).join(", ")} in order.`,
+      parts: [
+        {
+          id: "order",
+          kind: "text",
+          prompt: "Final order, front to rear",
+          answer: source.final.items.join(", ") || "empty",
+          explanation: source.trace.map((t) => t.explanation).join(" "),
+          auto: true,
+        },
+        {
+          id: "answer",
+          kind: "text",
+          prompt: source.steps[0].prompt,
+          answer: source.steps[0].answer,
+          explanation: source.steps[0].explanation,
+          auto: true,
+        },
+      ],
+    };
+  }
   if (gameId === "queue") {
     const { initial, final, operations } = source;
     const last = source.trace.at(-1);
@@ -141,9 +165,40 @@ export function paperQuestion(gameId, source, rng) {
   let code = source.code;
   let diagram;
   if (gameId === "bigO") {
-    prompt = source.scale
-      ? `The exact work model is W(n) = n^${source.scale.power}. The input changes from n to ${source.scale.factor}n, where n > 0.`
-      : "Assume n > 0, arithmetic does not overflow, and work() performs one constant-time O(1) operation.";
+    if (source.scale) {
+      const { power, factor, initialSize, mode, timeMs } = source.scale;
+      const change =
+        initialSize === undefined
+          ? `The input changes from n to ${factor}n, where n > 0.`
+          : `The input changes from ${initialSize} items to ${initialSize * factor} items (${factor} times as many).`;
+      prompt =
+        mode === "time"
+          ? `Assume the exact timing model T(n) = c * n^${power}, on the same machine with fixed c. ${change} At ${initialSize} items, the original time is ${timeMs} milliseconds. Find the new time in milliseconds; show the work ratio and time calculation.`
+          : `Assume the exact work model W(n) = n^${power}. ${change} Find the larger work divided by the original work; show your calculation.`;
+    } else {
+      prompt =
+        source.kind === "independent-inputs"
+          ? "Assume m > 0 and n > 0 are independent input sizes, arithmetic does not overflow, and work() performs one constant-time O(1) operation. Find the tightest bound in terms of m and n."
+          : "Assume n > 0, arithmetic does not overflow, and work() performs one constant-time O(1) operation. Search functions receive n valid array elements; binary search requires sorted input. Find the tightest bound, using the worst case for search functions.";
+    }
+    return {
+      title: practiceById(gameId).topic,
+      prompt,
+      code,
+      parts: source.steps.map((step, index) => ({
+        id: String(index + 1),
+        prompt: step.prompt,
+        kind: step.kind,
+        options: step.options,
+        answer: step.answer,
+        explanation: step.explanation,
+        format: source.scale ? step.format : "bigO",
+        unit: source.scale?.mode === "time" ? "milliseconds" : step.unit,
+        radix: step.radix,
+        allocation: step.allocation,
+        auto: true,
+      })),
+    };
   }
   if (gameId === "links") {
     prompt =
@@ -169,6 +224,10 @@ export function paperQuestion(gameId, source, rng) {
       answer: step.answer,
       explanation: step.explanation,
       auto: true,
+      format: step.format,
+      unit: step.unit,
+      radix: step.radix,
+      allocation: step.allocation,
     })),
   };
 }

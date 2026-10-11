@@ -15,3 +15,5 @@ Printing adds three checkpoints. Its `stop` is a zero-based token index and beco
 Source and lessons: [postfix.js](../../src/games/postfix.js). Shared contracts: [game data](../contracts.md), [UI](../ui.md), [independent practice validator](../../src/engine/practiceValidation.js). The detailed correctness argument is in [practice correctness](../practice-correctness.md).
 
 Tests: [generators.test.js](../../tests/generators.test.js), [practice-validation.test.js](../../tests/practice-validation.test.js), [feedback-lessons.test.js](../../tests/feedback-lessons.test.js), [worksheet.test.js](../../tests/worksheet.test.js).
+
+The full-postfix phase removes the checkpoint marker and intermediate stack entirely. It starts from the whole expression; a token-by-token checked/revealed review shows each operand/operator action, stack and accumulated output, followed by the final flush. Navigation never awards additional points.

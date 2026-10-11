@@ -68,7 +68,7 @@ export function explainQueueTarget(question) {
   return `${target}: ${route.join(" → ")}. Each successful ${action} advances it one index${wrapped ? `; ${initial.capacity - 1} wraps to 0` : ""}.`;
 }
 
-export function generateQueue(rng, level) {
+export function generateCircularQueue(rng, level) {
   const capacity = integer(rng, 4, 6);
   let initial = emptyQueue(
     capacity,
@@ -243,3 +243,125 @@ export const queueLessons = [
   ),
 ];
 export const queueTutorial = queueLessons[0].steps;
+
+// Ordinary FIFO questions use values, never physical array indices or wraparound.
+export function generateFifoQueue(rng, level) {
+  const count = integer(rng, 0, 4),
+    start = integer(rng, 1, 5) * 10;
+  let serial = start + count * 10;
+  const initial = {
+    items: Array.from({ length: count }, (_, i) => String(start + i * 10)),
+  };
+  let items = [...initial.items];
+  const trace = [],
+    operations = [];
+  for (let i = 0; i < level; i++) {
+    const before = { items: [...items] };
+    const operation =
+      rng() < 0.5
+        ? { kind: "enqueue", value: String((serial += 10)) }
+        : { kind: "dequeue" };
+    let result;
+    if (operation.kind === "enqueue") {
+      items.push(operation.value);
+      result = operation.value;
+    } else result = items.length ? items.shift() : "Empty";
+    const state = { items: [...items] };
+    const explanation =
+      operation.kind === "enqueue"
+        ? `Add ${operation.value} after the last item. The oldest item stays at the front.`
+        : result === "Empty"
+          ? "There is no first item, so DEQUEUE fails and changes nothing."
+          : `Remove ${result}, the first (oldest) item. The next item becomes the front.`;
+    trace.push({ before, state, operation, result, explanation });
+    operations.push(operation);
+  }
+  const target = pick(rng, ["first", "last", "count", "result"]),
+    final = { items };
+  const answer =
+    target === "count"
+      ? String(items.length)
+      : target === "first"
+        ? (items[0] ?? "Empty")
+        : target === "last"
+          ? (items.at(-1) ?? "Empty")
+          : trace.at(-1).result;
+  const pool =
+    target === "count"
+      ? Array.from({ length: 8 }, (_, i) => String(i))
+      : [
+          answer,
+          "Empty",
+          ...initial.items,
+          ...operations
+            .filter((op) => op.kind === "enqueue")
+            .map((op) => op.value),
+          "0",
+        ];
+  const options = shuffle(rng, [...new Set(pool)]).slice(0, 4);
+  if (!options.includes(answer)) options[0] = answer;
+  const prompt = {
+    first: "After the operations, which item is next to leave?",
+    last: "After the operations, which item is last in line?",
+    count: "After the operations, how many items remain?",
+    result: `Which item does the final ${operationLabel(operations.at(-1))} ${operations.at(-1).kind === "enqueue" ? "add" : "remove"}?`,
+  }[target];
+  return {
+    type: "queue",
+    variant: "fifo",
+    initial,
+    final,
+    trace,
+    operations,
+    target,
+    steps: [
+      {
+        kind: "choice",
+        prompt,
+        answer,
+        options,
+        hint: "This is an ordinary FIFO queue. ENQUEUE joins the end; DEQUEUE removes the first item. There are no array indices or wraparound.",
+        explanation: `Follow the line from front to rear. Final order: ${items.join(", ") || "empty"}. ${target === "count" ? `${items.length} items remain.` : `The requested item is ${answer}.`}`,
+      },
+    ],
+  };
+}
+export function generateQueue(rng, level) {
+  return rng() < 0.3
+    ? generateFifoQueue(rng, level)
+    : generateCircularQueue(rng, level);
+}
+
+queueLessons.push({
+  id: "ordinary-fifo",
+  title: "Ordinary queue · no wrapping",
+  summary: "Follow the item order, front to rear.",
+  steps: [
+    {
+      type: "queue",
+      state: { items: ["10", "20"] },
+      caption:
+        "10 arrived first, so it is at the front. 20 is last, at the rear.",
+      movement: "Start",
+    },
+    {
+      type: "queue",
+      state: { items: ["10", "20", "30"] },
+      caption: "ENQUEUE(30) joins the rear. Existing items keep their order.",
+      movement: "ENQUEUE(30)",
+    },
+    {
+      type: "queue",
+      state: { items: ["20", "30"] },
+      caption: "DEQUEUE() removes 10 from the front. 20 is now next to leave.",
+      movement: "DEQUEUE()",
+    },
+    {
+      type: "queue",
+      state: { items: ["30"] },
+      caption:
+        "DEQUEUE() removes 20. Only 30 remains; it is both front and rear.",
+      movement: "DEQUEUE()",
+    },
+  ],
+});

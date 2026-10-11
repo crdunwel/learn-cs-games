@@ -71,7 +71,10 @@ export function generateBases(rng, level = 1) {
         answer,
         radix: to,
         work: baseWork(source, from, answer, to),
-        hint: `Each source digit multiplies ${from} raised to its position. The rightmost position is 0, so its multiplier is 1. Add those products in decimal, then fill the base-${to} positions from largest to smallest.`,
+        hint:
+          from === 10
+            ? `The input is already decimal. Start with the largest base-${to} place. Choose a digit, subtract its product, and continue down to exponent 0.`
+            : `Each source digit multiplies ${from} raised to its position. The rightmost position is 0, so its multiplier is 1. Add those products in decimal, then fill the base-${to} positions from largest to smallest.`,
         explanation,
         illustration,
       },

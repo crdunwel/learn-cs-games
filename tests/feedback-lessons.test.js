@@ -7,7 +7,7 @@ import { convert, postfixLessons } from "../src/games/postfix.js";
 import {
   emptyQueue,
   queueMove,
-  generateQueue,
+  generateCircularQueue as generateQueue,
   queueLessons,
 } from "../src/games/queue.js";
 
@@ -242,6 +242,13 @@ test("all stack lessons process every token then visibly flush one operator at a
 test("queue lessons cover FIFO, wrap, full and empty without mutating previous scenes", () => {
   const results = new Set();
   for (const lesson of queueLessons) {
+    if (lesson.id === "ordinary-fifo") {
+      assert.deepEqual(
+        lesson.steps.map((step) => step.state.items),
+        [["10", "20"], ["10", "20", "30"], ["20", "30"], ["30"]],
+      );
+      continue;
+    }
     for (let index = 1; index < lesson.steps.length; index++) {
       const step = lesson.steps[index];
       const previous = lesson.steps[index - 1].state;

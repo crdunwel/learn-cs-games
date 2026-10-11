@@ -1,3 +1,7 @@
+import { validateBigOQuestion, countBigOWork } from "./bigOValidation.js";
+import { validateRecursionQuestion } from "./recursionValidation.js";
+import { validateSearchQuestion } from "./searchValidation.js";
+import { validateMallocQuestion } from "./mallocValidation.js";
 // Independent, deterministic checks run before a practice question is shown or printed.
 // This module deliberately imports neither generators nor their solution helpers.
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -138,7 +142,62 @@ export function queueStateIsValid(state) {
     occupied.has(index) ? value !== null : value === null,
   );
 }
+function ordinaryQueue(q) {
+  need(
+    Array.isArray(q.initial.items) &&
+      q.initial.items.length <= 4 &&
+      q.initial.items.every((v) => /^\d+$/.test(v)),
+    "ordinary FIFO initial state",
+  );
+  need(
+    q.operations.length >= 1 &&
+      q.operations.length <= 3 &&
+      q.operations.length === q.trace.length,
+    "ordinary trace length",
+  );
+  const list = [...q.initial.items];
+  let before = q.initial,
+    result;
+  q.operations.forEach((op, i) => {
+    need(
+      same(q.trace[i].before, before) && same(q.trace[i].operation, op),
+      "ordinary trace input",
+    );
+    if (op.kind === "enqueue") {
+      need(
+        typeof op.value === "string" && /^\d+$/.test(op.value),
+        "FIFO payload",
+      );
+      list.push(op.value);
+      result = op.value;
+    } else {
+      need(op.kind === "dequeue", "ordinary operation");
+      result = list.length ? list.splice(0, 1)[0] : "Empty";
+    }
+    before = { items: [...list] };
+    need(
+      same(q.trace[i].state, before) && q.trace[i].result === result,
+      "ordinary FIFO transition",
+    );
+  });
+  need(same(q.final, before), "ordinary final state");
+  need(
+    ["first", "last", "count", "result"].includes(q.target),
+    "ordinary target",
+  );
+  answerIs(
+    q,
+    q.target === "first"
+      ? (list[0] ?? "Empty")
+      : q.target === "last"
+        ? (list.at(-1) ?? "Empty")
+        : q.target === "count"
+          ? list.length
+          : result,
+  );
+}
 function queue(q) {
+  if (q.variant === "fifo") return ordinaryQueue(q);
   need(queueStateIsValid(q.initial), "initial circular queue");
   const { capacity } = q.initial;
   let front = q.initial.front,
@@ -190,178 +249,16 @@ function queue(q) {
   answerIs(q, q.target === "result" ? result : before[q.target]);
 }
 
-export function bigOWorkCount(question, n) {
-  const tokens = cTokens(question.code);
-  const templates = {
-    square: "for(int i=0;i<n;i++){for(int j=0;j<n;j++){work();}}",
-    log: "for(int i=n;i>1;i/=2){work();}",
-    nlog: "for(int i=0;i<n;i++){for(int j=n;j>1;j/=2){work();}}",
-    triangle: "for(int i=0;i<n;i++){for(int j=0;j<i;j++){work();}}",
-    sequential: "for(int i=0;i<n;i++)work();for(int j=0;j<n;j++)work();",
-  };
-  if (question.kind === "constant") {
-    const fixed = Number(tokens[9]);
-    need(integer(fixed, 3, 20), "constant loop source");
-    codeIs(question, `for (int i=0;i<${fixed};i++) {work();}`);
-    return fixed;
-  }
-  if (question.kind === "linear") {
-    const step = Number(tokens[13]);
-    need(integer(step, 2, 5), "linear loop source");
-    codeIs(question, `for (int i=0;i<n;i+=${step}) {work();}`);
-    return Math.ceil(n / step);
-  }
-  need(Object.hasOwn(templates, question.kind), "unrecognized loop template");
-  codeIs(question, templates[question.kind]);
-  return {
-    square: n * n,
-    log: Math.floor(Math.log2(n)),
-    nlog: n * Math.floor(Math.log2(n)),
-    triangle: (n * (n - 1)) / 2,
-    sequential: 2 * n,
-  }[question.kind];
+export function bigOWorkCount(question, n, m = n) {
+  return countBigOWork(question, n, m);
 }
+
 function bigO(q) {
-  if (q.scale) {
-    need(
-      integer(q.scale.power, 0, 3) && integer(q.scale.factor, 2, 4),
-      "growth model domain",
-    );
-    let ratio = 1;
-    for (let i = 0; i < q.scale.power; i++) ratio *= q.scale.factor;
-    answerIs(q, `${ratio}×`);
-  } else {
-    bigOWorkCount(q, 17); // Also verifies the displayed source, not just its kind label.
-    answerIs(
-      q,
-      {
-        constant: "O(1)",
-        linear: "O(n)",
-        square: "O(n²)",
-        log: "O(log n)",
-        nlog: "O(n log n)",
-        triangle: "O(n²)",
-        sequential: "O(n)",
-      }[q.kind],
-    );
-  }
+  return validateBigOQuestion(q);
 }
 
 function recursion(q) {
-  const d = q.data;
-  let expected;
-  if (q.topic === "sum") {
-    need(
-      integer(d.n, 0, 18) &&
-        integer(d.decrement, 1, 4) &&
-        integer(d.base, 0, 4),
-      "recursive sum domain",
-    );
-    need(
-      q.steps[0].prompt === `What does total(${d.n}) return?`,
-      "displayed recursive call",
-    );
-    const terms = Math.ceil(d.n / d.decrement);
-    expected = terms * d.n - (d.decrement * terms * (terms - 1)) / 2 + d.base;
-    codeIs(
-      q,
-      `int total(int n) { if (n <= 0) return ${d.base}; return n + total(n - ${d.decrement}); }`,
-    );
-  } else if (q.topic === "print") {
-    need(
-      integer(d.n, 2, 8) && typeof d.before === "boolean",
-      "recursive print domain",
-    );
-    need(
-      q.steps[0].prompt === `What does printSeq(${d.n}) print?`,
-      "displayed print call",
-    );
-    expected = Array.from({ length: d.n }, (_, i) =>
-      d.before ? d.n - i : i + 1,
-    ).join(" ");
-    codeIs(
-      q,
-      `void printSeq(int n) { if (n == 0) return; ${d.before ? 'printf("%d ", n); printSeq(n - 1);' : 'printSeq(n - 1); printf("%d ", n);'} }`,
-    );
-  } else if (["array-sum", "evens"].includes(q.topic)) {
-    need(
-      integer(d.values.length, 3, 7) &&
-        d.values.every((n) => integer(n, 0, q.topic === "evens" ? 19 : 9)),
-      "array domain",
-    );
-    need(
-      integer(d.high, 0, d.values.length - 1) && integer(d.low, 0, d.high + 1),
-      "recursive array range",
-    );
-    need(same(q.visual.items, d.values.map(String)), "displayed array values");
-    const call =
-      q.topic === "evens"
-        ? `evens(arr, ${d.low}, ${d.high})`
-        : `sumOfDigits(arr, ${d.values.length}, ${d.low})`;
-    need(
-      q.steps[0].prompt === `What does ${call} return?`,
-      "displayed array call",
-    );
-    let sum = 0;
-    for (let i = d.low; i <= d.high; i++)
-      sum +=
-        q.topic === "evens"
-          ? Number(Number.isInteger(d.values[i] / 2))
-          : d.values[i];
-    expected = sum;
-    if (q.topic === "array-sum") {
-      need(d.high === d.values.length - 1, "array sum must finish at size");
-      codeIs(
-        q,
-        "int sumOfDigits(int arr[], int size, int index) { if (index == size) return 0; return arr[index] + sumOfDigits(arr, size, index + 1); }",
-      );
-    } else
-      codeIs(
-        q,
-        "int evens(int arr[], int lowInd, int highInd) { if (lowInd > highInd) return 0; return (arr[lowInd] % 2 == 0) + evens(arr, lowInd + 1, highInd); }",
-      );
-  } else if (q.topic === "power") {
-    need(integer(d.a, 2, 9) && integer(d.b, 0, 4), "power domain");
-    need(
-      q.steps[0].prompt === `What does power(${d.a}, ${d.b}) return?`,
-      "displayed power call",
-    );
-    expected = 1;
-    for (let i = 0; i < d.b; i++) expected *= d.a;
-    codeIs(
-      q,
-      "int power(int a, int b) { if (b == 0) return 1; return a * power(a, b - 1); }",
-    );
-  } else if (q.topic === "recurrence") {
-    need(integer(d.n, 0, 7), "recurrence domain");
-    need(
-      q.steps[0].prompt === `What does f(${d.n}) return?`,
-      "displayed recurrence call",
-    );
-    const table = [1, 1, 3];
-    for (let n = 3; n <= d.n; n++)
-      table[n] = 2 * table[n - 1] + table[n - 2] - 1;
-    expected = table[d.n];
-    codeIs(
-      q,
-      "int f(int n) { if (n <= 1) return 1; if (n == 2) return 3; return 2 * f(n - 1) + f(n - 2) - 1; }",
-    );
-  } else {
-    need(
-      ["base-case", "recursive-step"].includes(q.topic),
-      "unknown recursive template",
-    );
-    need(
-      integer(d.n, 3, 20) && integer(d.decrement, 1, 5),
-      "countCalls domain",
-    );
-    expected = q.topic === "base-case" ? "n <= 0" : `n - ${d.decrement}`;
-    codeIs(
-      q,
-      `int countCalls(int n) { if (${q.topic === "base-case" ? "/* fill here */" : "n <= 0"}) return 0; return 1 + countCalls(${q.topic === "base-case" ? `n - ${d.decrement}` : "/* fill here */"}); }`,
-    );
-  }
-  answerIs(q, expected);
+  return validateRecursionQuestion(q);
 }
 
 function links(q) {
@@ -435,50 +332,11 @@ export function searchByPartition(
   ];
 }
 function search(q) {
-  const m = q.meta;
-  need(
-    integer(m.array.length, 5, 10) &&
-      m.array.every(
-        (v, i) => Number.isInteger(v) && (!i || v > m.array[i - 1]),
-      ),
-    "search requires sorted distinct integers",
-  );
-  need(
-    same(q.visual.items, m.array.map(String)) &&
-      q.visual.label.includes(`searchKey = ${m.target}`),
-    "displayed search inputs",
-  );
-  const rounds = searchByPartition(m.array, m.target);
-  need(
-    rounds.some((r) =>
-      ["low", "high", "mid", "value"].every((key) => r[key] === m[key]),
-    ),
-    "displayed search round was never reached",
-  );
-  let expected;
-  if (m.kind === "mid") {
-    expected = Math.floor((m.low + m.high) / 2);
-    codeIs(
-      q,
-      `int low = ${m.low}, high = ${m.high}; int mid = low + (high - low) / 2;`,
-    );
-  } else if (m.kind === "bounds") {
-    need(m.target !== m.value, "matching key must return, not update bounds");
-    expected =
-      m.target < m.value ? `high = ${m.mid - 1}` : `low = ${m.mid + 1}`;
-    codeIs(q, `int low = ${m.low}, high = ${m.high}; int mid = ${m.mid};`);
-  } else {
-    need(["result", "comparisons"].includes(m.kind), "unknown search question");
-    expected = m.kind === "result" ? m.array.indexOf(m.target) : rounds.length;
-    codeIs(
-      q,
-      `int low = 0, high = n - 1; while (low <= high) { int mid = low + (high - low) / 2; if (a[mid] == ${m.target}) return mid; if (${m.target} < a[mid]) high = mid - 1; else low = mid + 1; } return -1;`,
-    );
-  }
-  answerIs(q, expected);
+  return validateSearchQuestion(q);
 }
 
 function memory(q) {
+  if (q.meta.kind === "malloc-write") return validateMallocQuestion(q);
   const m = q.meta;
   need(integer(m.count, 12, 240), "allocation count");
   let expected;

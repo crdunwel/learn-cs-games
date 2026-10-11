@@ -25,3 +25,11 @@ Checks: [layout stability](../tests/browser/stability.spec.js), [tooltips](../te
 ## Preserve teaching notation
 
 C source uses preserved lines in a focusable horizontal scroll region. Never break an identifier, numeric literal, pointer expression, base-conversion result, or diagram label in the middle just to fit a phone. Long diagrams and infix/postfix notation scroll locally; ordinary explanatory prose wraps at word boundaries. Code/sequence choices use full-width rows and local scrolling. `step.optionFormat` is `code` or `sequence` for these options; omit it for normal prose. Print remains word-boundary wrapped on paper rather than depending on a scroll region. See `tests/browser/wrapping-variety.spec.js` for 320/768/1440px checks, alongside the existing stability and printing suites.
+
+## Learning after a mistake
+
+[StepReview](../src/components/StepReview.jsx) presents one calculation/action at a time from validated question metadata. [learningSteps.js](../src/engine/learningSteps.js) adapts postfix token processing and older illustrations. Changing review position never changes the draft, correctness or XP. Queue review remains in its diagram: checking starts at the **original** state; Next operation applies one whole operation and displays the item action, modulo arithmetic, size change, and unchanged pointer. Replay restarts at the original state. Ordinary FIFO questions use item order and no array indices.
+
+Full-postfix entry shows the whole expression without a checkpoint marker or partial operator stack. The scene reserves the first stack phase's measured height so advancing does not move the Check button. Source/answer regions and the feedback dock stay fixed within the question.
+
+Tutorials measure the largest actual scene and caption **within the selected lesson**, then align current content at the top. Different lessons may need different height; navigation must remain stable through that lesson. Hidden Learn panels skip zero-width measurements. Observers reattach when lessons change; measurement nodes are clipped, inert and removed after sizing. Do not restore a global 720px centered region to achieve stability: that creates empty space before short C examples.

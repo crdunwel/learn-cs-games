@@ -1,8 +1,12 @@
+import { gradeMallocAnswer } from "../engine/mallocAnswer.js";
+import QueueLine from "./QueueLine.jsx";
+import StepReview from "./StepReview.jsx";
+import { reviewSteps, queueMoveSteps } from "../engine/learningSteps.js";
 import BaseWork from "./BaseWork.jsx";
 import { baseWorkResult, baseWorkFeedback } from "../engine/baseWork.js";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { startSession, sessionReducer } from "../engine/session.js";
-import { explainMistake, workedExample } from "../engine/feedback.js";
+import { explainMistake } from "../engine/feedback.js";
 import { recordRound } from "../engine/progress.js";
 import { operationLabel } from "../games/queue.js";
 import { Stack, Tokens, QueueArray } from "./Visuals.jsx";
@@ -13,32 +17,33 @@ import { answerFormatHint } from "../engine/answerFormats.js";
 
 // Replays are visual only: they never dispatch an answer or award points.
 function QueueScene({ question, checked, draft, onSelect }) {
-  const trace = question.trace;
-  const [move, setMove] = useState(trace.length);
-  const [playing, setPlaying] = useState(false);
+  const [move, setMove] = useState(0),
+    [playing, setPlaying] = useState(false);
+  const trace = question.trace,
+    ordinary = question.variant === "fifo";
   useEffect(() => {
-    setMove(trace.length);
+    setMove(0);
     setPlaying(false);
   }, [checked, question]);
   useEffect(() => {
-    if (!playing || move >= trace.length) {
-      if (playing) setPlaying(false);
+    if (!playing) return;
+    if (move >= trace.length) {
+      setPlaying(false);
       return;
     }
-    const timer = setTimeout(() => setMove((index) => index + 1), 1100);
+    const timer = setTimeout(() => setMove((i) => i + 1), 1500);
     return () => clearTimeout(timer);
   }, [playing, move, trace.length]);
-  const indexQuestion = ["front", "rear"].includes(question.target);
   const state = checked && move ? trace[move - 1].state : question.initial;
-  function goTo(index) {
-    setPlaying(false);
-    setMove(index);
-  }
+  const indexQuestion =
+    !ordinary && ["front", "rear"].includes(question.target);
+  const entry = checked && move ? trace[move - 1] : null;
+  const details = entry ? queueMoveSteps(entry) : [];
   return (
     <>
       <p className="queue-instruction">
-        ENQUEUE adds an item. DEQUEUE removes the first item.
-        {trace.length > 1 ? " Work left to right." : ""}
+        ENQUEUE adds an item. DEQUEUE removes the first item. Work left to
+        right.
       </p>
       <div className="operations" aria-label="Queue operations">
         {question.operations.map((op, i) => (
@@ -53,51 +58,87 @@ function QueueScene({ question, checked, draft, onSelect }) {
         ))}
       </div>
       <span className="diagram-label">
-        {checked
-          ? move === trace.length
+        {!checked || !move
+          ? "STARTING QUEUE"
+          : move === trace.length
             ? "AFTER THE OPERATIONS"
-            : move
-              ? `AFTER OPERATION ${move}`
-              : "STARTING QUEUE"
-          : "STARTING QUEUE"}
+            : `AFTER OPERATION ${move}`}
       </span>
-      <div className="queue-state-values" aria-label="Queue indices and size">
-        <span>
-          front = <b>{state.front}</b>
-        </span>
-        <span>
-          rear = <b>{state.rear}</b>
-        </span>
-        <span>
-          QSize = <b>{state.count}</b>
-        </span>
-      </div>
-      <QueueArray
-        state={state}
-        selectedIndex={
-          indexQuestion && draft !== "" ? Number(draft) : undefined
-        }
-        correctIndex={
-          checked && indexQuestion && move === trace.length
-            ? Number(question.steps[0].answer)
-            : undefined
-        }
-        onSelect={
-          !checked && indexQuestion
-            ? (index) => onSelect(String(index))
-            : undefined
-        }
-      />
+      {ordinary ? (
+        <QueueLine items={state.items} />
+      ) : (
+        <>
+          <div
+            className="queue-state-values"
+            aria-label="Queue indices and size"
+          >
+            <span>
+              front = <b>{state.front}</b>
+            </span>
+            <span>
+              rear = <b>{state.rear}</b>
+            </span>
+            <span>
+              QSize = <b>{state.count}</b>
+            </span>
+          </div>
+          <QueueArray
+            state={state}
+            selectedIndex={
+              indexQuestion && draft !== "" ? Number(draft) : undefined
+            }
+            correctIndex={
+              checked && indexQuestion && move === trace.length
+                ? Number(question.steps[0].answer)
+                : undefined
+            }
+            onSelect={
+              !checked && indexQuestion ? (i) => onSelect(String(i)) : undefined
+            }
+          />
+          <p className="queue-cycle">
+            Index order:{" "}
+            {Array.from({ length: state.capacity }, (_, i) => i).join(" → ")} →
+            0
+          </p>
+        </>
+      )}
       <div className="queue-replay">
         <p className="replay-status" aria-live="polite">
           {checked
             ? move
-              ? trace[move - 1].explanation
-              : "Starting queue. Use Next operation to follow the changes."
-            : indexQuestion
-              ? `Select an index for ${question.target}; the diagram stays at the starting state until you check.`
-              : "Choose your answer below."}
+              ? `Operation ${move} / ${trace.length}: ${operationLabel(entry.operation)}`
+              : `Start here. Next: ${operationLabel(question.operations[0])}. Tap Next operation to see each change.`
+            : ordinary
+              ? "Follow the line: the oldest item leaves first."
+              : "front points to the next item out. rear points to the last item in."}
         </p>
+        <div className="queue-move-detail">
+          {details.length ? (
+            details.map((d, i) => (
+              <div key={i}>
+                <b>
+                  {i + 1}. {d.title}
+                </b>
+                <p>{d.detail}</p>
+                <pre tabIndex={0}>{d.math}</pre>
+              </div>
+            ))
+          ) : (
+            <p>
+              {ordinary ? (
+                "ENQUEUE joins the rear. DEQUEUE removes the front. No indices or wraparound."
+              ) : (
+                <>
+                  Advance an index with{" "}
+                  <code>(index + 1) % {state.capacity}</code>. After index{" "}
+                  {state.capacity - 1}, the next slot is 0. The % operator gives
+                  the remainder.
+                </>
+              )}
+            </p>
+          )}
+        </div>
         <div
           className={`replay-buttons ${!checked ? "is-inactive" : ""}`}
           aria-hidden={!checked}
@@ -106,7 +147,10 @@ function QueueScene({ question, checked, draft, onSelect }) {
             type="button"
             className="quiet-button"
             disabled={!checked || !move}
-            onClick={() => goTo(move - 1)}
+            onClick={() => {
+              setPlaying(false);
+              setMove(move - 1);
+            }}
           >
             ← Previous
           </button>
@@ -114,7 +158,10 @@ function QueueScene({ question, checked, draft, onSelect }) {
             type="button"
             className="quiet-button"
             disabled={!checked || move >= trace.length}
-            onClick={() => goTo(move + 1)}
+            onClick={() => {
+              setPlaying(false);
+              setMove(move + 1);
+            }}
           >
             Next operation →
           </button>
@@ -150,9 +197,28 @@ export default function Practice({ game, level, onProgress }) {
   const { question, step: stepIndex, draft, status } = session;
   const step = question.steps[stepIndex],
     checked = status !== "answering";
+  const postfixScene = useRef(null);
+  const [postfixHeight, setPostfixHeight] = useState(null);
+  useLayoutEffect(() => {
+    if (step.kind !== "stack" || !postfixScene.current) return;
+    const node = postfixScene.current;
+    const capture = () => {
+      const height = node.getBoundingClientRect().height;
+      if (height > 0)
+        setPostfixHeight((previous) =>
+          previous === height ? previous : height,
+        );
+    };
+    const observer = new ResizeObserver(capture);
+    observer.observe(node);
+    capture();
+    return () => observer.disconnect();
+  }, [question, step.kind]);
   const finalStep = stepIndex === question.steps.length - 1;
   const indexQuestion =
-    question.type === "queue" && ["front", "rear"].includes(question.target);
+    question.type === "queue" &&
+    question.variant !== "fifo" &&
+    ["front", "rear"].includes(question.target);
   function send(action) {
     const before = current.current,
       after = sessionReducer(before, action);
@@ -192,7 +258,9 @@ export default function Practice({ game, level, onProgress }) {
               ? "01 / STACK CHECK"
               : "02 / POSTFIX FINISH"
             : question.type === "queue"
-              ? "CIRCULAR ARRAY QUEUE"
+              ? question.variant === "fifo"
+                ? "ORDINARY FIFO QUEUE"
+                : "CIRCULAR ARRAY QUEUE"
               : question.type === "trace"
                 ? game.topic.toUpperCase()
                 : "SPOT THE PATTERN"}
@@ -200,8 +268,10 @@ export default function Practice({ game, level, onProgress }) {
         <Help key={`${session.round}-${stepIndex}`} label="Show hint">
           {step.hint}
           <hr />
-          Correct answer: +10 XP. Reveals: 0 XP. A perfect round grows your
-          streak.
+          {step.format === "malloc"
+            ? "Correct allocation: 10 XP, or 9 XP if only the semicolon is missing."
+            : "Correct answer: +10 XP."}{" "}
+          Reveals: 0 XP. A perfect round grows your streak.
         </Help>
       </div>
       <h2>
@@ -214,8 +284,10 @@ export default function Practice({ game, level, onProgress }) {
           <>
             <Tokens
               tokens={question.tokens}
-              stop={question.stop}
-              checkpointLabel={question.checkpoint.label}
+              stop={step.kind === "stack" ? question.stop : undefined}
+              checkpointLabel={
+                step.kind === "stack" ? question.checkpoint.label : undefined
+              }
             />
             <p className="checkpoint">
               {stepIndex === 0 ? (
@@ -230,19 +302,23 @@ export default function Practice({ game, level, onProgress }) {
             </p>
             <div
               className={`stack-scene ${step.kind === "postfix" ? "postfix-entry-scene" : ""}`}
+              ref={postfixScene}
+              style={{ minHeight: postfixHeight }}
             >
-              <Stack
-                values={
-                  step.kind === "stack"
-                    ? checked
-                      ? expectedStack
-                      : draft
-                    : [
-                        ...question.solution.states[question.stop].stack,
-                      ].reverse()
-                }
-                capacity={question.stackCapacity}
-              />
+              {step.kind === "stack" && (
+                <Stack
+                  values={
+                    step.kind === "stack"
+                      ? checked
+                        ? expectedStack
+                        : draft
+                      : [
+                          ...question.solution.states[question.stop].stack,
+                        ].reverse()
+                  }
+                  capacity={question.stackCapacity}
+                />
+              )}
               {step.kind === "stack" ? (
                 <div className="stack-builder">
                   <span className="eyebrow">
@@ -302,7 +378,7 @@ export default function Practice({ game, level, onProgress }) {
                     {answerFormatHint(step)}
                   </p>
                   <p className="builder-note">
-                    Stack shown at point A. Finish the entire expression.
+                    Start from the first token. Convert the whole expression.
                   </p>
                 </div>
               )}
@@ -323,13 +399,25 @@ export default function Practice({ game, level, onProgress }) {
             <CodeBlock code={question.code} />
           ) : (
             <div className="scale-scene">
-              <span className="eyebrow">EXACT WORK MODEL</span>
+              <span className="eyebrow">
+                {question.scale.mode === "time"
+                  ? "EXACT TIME MODEL"
+                  : "EXACT WORK MODEL"}
+              </span>
               <strong>
-                W(n) = {["1", "n", "n²", "n³"][question.scale.power]}
+                {question.scale.mode === "time" ? "T(n) = c × " : "W(n) = "}
+                {["1", "n", "n²", "n³"][question.scale.power]}
               </strong>
               <div>
-                n <span>→</span> {question.scale.factor}n
+                {question.scale.initialSize} items <span>→</span>{" "}
+                {question.scale.initialSize * question.scale.factor} items
               </div>
+              {question.scale.mode === "time" && (
+                <p>
+                  Original time: {question.scale.timeMs} ms. Same machine; c
+                  stays fixed.
+                </p>
+              )}
             </div>
           ))}
         {question.type === "trace" && !step.work && (
@@ -355,14 +443,25 @@ export default function Practice({ game, level, onProgress }) {
               aria-describedby="short-answer-format"
               form="practice-answer"
               autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
               spellCheck="false"
-              placeholder="Type your answer"
+              placeholder={
+                step.format === "malloc"
+                  ? `e.g. ${step.allocation.type} *${step.allocation.name} = malloc(...);`
+                  : "Type your answer"
+              }
+              className={
+                step.format === "malloc" ? "code-answer-input" : undefined
+              }
               value={draft}
               disabled={checked}
               onChange={(event) => setDraft(event.target.value)}
             />
             <p className="answer-format-hint" id="short-answer-format">
-              {answerFormatHint(step)}
+              {step.format === "malloc"
+                ? "Write one malloc assignment. Spacing is flexible. A missing semicolon costs 1 point."
+                : answerFormatHint(step)}
             </p>
           </div>
         )}
@@ -411,7 +510,7 @@ export default function Practice({ game, level, onProgress }) {
           <strong>
             {checked
               ? status === "correct"
-                ? "✓ Correct. +10 XP"
+                ? `✓ Correct. +${step.format === "malloc" ? gradeMallocAnswer(step, draft).earned : 10} XP`
                 : status === "revealed"
                   ? "Here’s why."
                   : "Not quite. Here’s why."
@@ -431,25 +530,33 @@ export default function Practice({ game, level, onProgress }) {
           >
             {checked
               ? status === "incorrect"
-                ? step.work
-                  ? baseWorkFeedback(step.work, draft)
-                  : explainMistake(question, stepIndex, draft)
+                ? step.format === "malloc"
+                  ? gradeMallocAnswer(step, draft).reason || step.explanation
+                  : step.work
+                    ? baseWorkFeedback(step.work, draft)
+                    : explainMistake(question, stepIndex, draft)
                 : step.work
                   ? "Each digit × its place value makes a product. Add the products: both bases describe the same number."
                   : step.explanation
               : ""}
           </p>
+          {session.warning && (
+            <p className="syntax-reminder">{session.warning}</p>
+          )}
           <div className="feedback-illustration" aria-label="Worked example">
-            {checked &&
-              !step.work &&
-              workedExample(question, stepIndex).map((item, index) => (
-                <span key={index}>{item}</span>
-              ))}
+            {checked && !step.work && question.type !== "queue" && (
+              <StepReview
+                key={`${session.round}-${stepIndex}`}
+                steps={reviewSteps(question, stepIndex)}
+              />
+            )}
             {checked && step.work && (
               <p className="base-work-summary">
-                {question.data.source} (base {question.data.from}) ={" "}
-                {question.data.value} (decimal) = {step.answer} (base{" "}
-                {step.radix})
+                {question.data.from === 10
+                  ? `${question.data.value} (decimal) = ${step.answer} (base ${step.radix})`
+                  : question.data.to === 10
+                    ? `${question.data.source} (base ${question.data.from}) = ${question.data.value} (decimal)`
+                    : `${question.data.source} (base ${question.data.from}) = ${question.data.value} (decimal) = ${step.answer} (base ${step.radix})`}
               </p>
             )}
           </div>
