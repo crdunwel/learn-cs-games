@@ -355,3 +355,23 @@ test("desktop writing stays one readable column with stable action placement", a
     ),
   ).toBeCloseTo(start, 1);
 });
+
+test("whole-function starts with a clean scaffold, retaining partial guided work", async ({
+  page,
+}) => {
+  const q = byId("queue-doubly-dequeue");
+  await page.goto(`/#code/${q.id}`);
+  await page
+    .getByLabel("Write the next line of C", { exact: true })
+    .fill(q.lines[0].code);
+  await page
+    .getByRole("button", { name: "Whole function", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Write the complete function", { exact: true }),
+  ).toHaveValue(`${q.signature}\n\n}`);
+  await page.getByRole("button", { name: "Line by line", exact: true }).click();
+  await expect(
+    page.getByLabel("Write the next line of C", { exact: true }),
+  ).toHaveValue(q.lines[0].code);
+});

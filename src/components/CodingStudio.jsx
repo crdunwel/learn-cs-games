@@ -164,16 +164,24 @@ export default function CodingStudio({ exerciseId }) {
     window.location.hash = `code/${id}`;
   }
   function chooseMode(next) {
-    if (next === "raw" && draft.raw == null)
+    if (next === "raw" && draft.raw == null) {
+      const allWritten = exercise.lines.every(
+        (line, i) =>
+          line.fixed ||
+          isRecognized(checkWritingLine(draft.lines[i] || "", line)),
+      );
       update({
-        raw: [
-          exercise.signature,
-          ...exercise.lines.map((line, i) =>
-            line.fixed ? line.code : draft.lines[i] || "",
-          ),
-          "}",
-        ].join("\n"),
+        raw: allWritten
+          ? [
+              exercise.signature,
+              ...exercise.lines.map((line, i) =>
+                line.fixed ? line.code : draft.lines[i],
+              ),
+              "}",
+            ].join("\n")
+          : `${exercise.signature}\n\n}`,
       });
+    }
     setMode(next);
     setFeedback(null);
     setShowModel(false);
